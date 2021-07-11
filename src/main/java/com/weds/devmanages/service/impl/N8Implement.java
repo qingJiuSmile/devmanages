@@ -11,6 +11,7 @@ import com.weds.devmanages.util.TaskQueueDaemonThread;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -21,6 +22,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.SynchronousQueue;
@@ -442,22 +445,45 @@ public class N8Implement implements N8ApiInterface {
 
     @Override
     public boolean deviceUpdate(String ip, String pwd, MultipartFile file) {
-        String url = REQUEST_PREFIX + ip + "/config/update_app";
+        String url = REQUEST_PREFIX + "localhost:8081" + "/excel/import/";
 
-        HttpHeaders requestHeaders = new HttpHeaders();
-        requestHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
-        requestHeaders.add("Cookie", "jtoken=" + tokenMap.get(ip).toString());
-        //body
-        MultiValueMap<String, Object> requestBody = new LinkedMultiValueMap<>();
-        requestBody.add("password ", pwd);
-        requestBody.add("file", file);
-        //HttpEntity
-        HttpEntity<MultiValueMap> requestEntity = new HttpEntity<>(requestBody, requestHeaders);
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, requestEntity, String.class);
-        log.info(responseEntity.toString());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+      //  headers.add("Cookie", "jtoken=" + tokenMap.get(ip).toString());
+        LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+        try {
+            map.add("file", new MultipartInputStreamFileResource(file.getInputStream(), file.getOriginalFilename()));
+            HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, headers);
+            String response = restTemplate.postForObject(url, requestEntity, String.class);
+            log.info(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
         return false;
     }
 
+
+     class MultipartInputStreamFileResource extends InputStreamResource {
+
+        private final String filename;
+
+        MultipartInputStreamFileResource(InputStream inputStream, String filename) {
+            super(inputStream);
+            this.filename = filename;
+        }
+
+        @Override
+        public String getFilename() {
+            return this.filename;
+        }
+
+        @Override
+        public long contentLength() throws IOException {
+            return -1; // we do not want to generally read the whole stream into memory ...
+        }
+    }
 
     /**
      * sysInfo重试机制

@@ -19,6 +19,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -95,5 +97,6 @@ class DevmanagesApplicationTests {
         String s = restTemplate.postForObject(url, files, String.class);
         System.out.println(s);
     }
+
 
 }

@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
@@ -73,11 +75,11 @@ public class Test extends BaseClass {
     @ApiOperation("更新设备文件")
     @PostMapping("/deviceUpdate/{ip}")
     public JsonResult<Boolean> deviceUpdate(@PathVariable String ip, String password, MultipartFile file) {
+        System.out.print("进入程序 ======================================================");
         if (StringUtils.isBlank(ip)) {
             return failMsg("设备ip为空");
         }
         return succMsgData(n8Implement.deviceUpdate(ip,password,file));
     }
-
 
 }
