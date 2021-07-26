@@ -14,11 +14,6 @@ import java.util.List;
 @Data
 public class DiskInfoEntity {
 
-    private String msg;
-
-    private Integer code;
-
-    private DiskInfoData data;
 
     private List<?> rows;
 

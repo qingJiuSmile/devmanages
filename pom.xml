@@ -21,6 +21,7 @@
         <commons-lang.version>2.6</commons-lang.version>
         <commons-text.version>1.6</commons-text.version>
         <commons-io.version>2.6</commons-io.version>
+        <thumbnailator.version>0.4.8</thumbnailator.version>
     </properties>
 
     <dependencies>
@@ -36,12 +37,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
-       <!-- <dependency>
-            <groupId>com.taobao.arthas</groupId>
-            <artifactId>arthas-spring-boot-starter</artifactId>
-            <version>3.4.5</version>
-            <scope>runtime</scope>
-        </dependency>-->
+        <!-- <dependency>
+             <groupId>com.taobao.arthas</groupId>
+             <artifactId>arthas-spring-boot-starter</artifactId>
+             <version>3.4.5</version>
+             <scope>runtime</scope>
+         </dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
@@ -111,6 +112,12 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
             <version>${commons-text.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.coobird</groupId>
+            <artifactId>thumbnailator</artifactId>
+            <version>${thumbnailator.version}</version>
         </dependency>
 
     </dependencies>

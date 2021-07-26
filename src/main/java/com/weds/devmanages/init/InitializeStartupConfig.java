@@ -1,6 +1,6 @@
 package com.weds.devmanages.init;
 
-import com.weds.devmanages.service.impl.N8Implement;
+import com.weds.devmanages.service.impl.base.DevBaseImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 public class InitializeStartupConfig implements ApplicationRunner {
 
     @Autowired
-    private N8Implement n8Implement;
+    private DevBaseImpl n8Implement;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {

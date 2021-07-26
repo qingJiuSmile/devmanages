@@ -1,10 +1,14 @@
 package com.weds.devmanages.util;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -596,12 +600,36 @@ public class RedisUtil {
      */
     public long lRemove(String key, long count, Object value) {
         try {
-            Long remove = redisTemplate.opsForList().remove(key, count, value);
-            return remove;
+            return redisTemplate.opsForList().remove(key, count, value);
         } catch (Exception e) {
             e.printStackTrace();
             return 0;
         }
+    }
+
+    /**
+     * 获取当前路径下，所有key
+     *
+     * @param pattern 路径（可以是模糊路径）
+     * @param count   每次遍历次数（小于0默认10000）
+     * @author tjy
+     **/
+    public Set<String> getScanKeys(String pattern, int count) {
+        return redisTemplate.execute((RedisCallback<Set<String>>) connection -> {
+            Set<String> tmpKeys = new HashSet<>();
+            ScanOptions options;
+            if (count <= 0) {
+                options = ScanOptions.scanOptions().match(pattern).count(10000).build();
+            } else {
+                options = ScanOptions.scanOptions().match(pattern).count(count).build();
+            }
+            // 迭代一直查找，直到找到redis中所有满足条件的key为止(cursor变为0为止)
+            Cursor<byte[]> cursor = connection.scan(options);
+            while (cursor.hasNext()) {
+                tmpKeys.add(new String(cursor.next()));
+            }
+            return tmpKeys;
+        });
     }
 
 }

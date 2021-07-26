@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="js/themes/default/easyui.css">
     <link rel="stylesheet" href="css/wu.css">
     <script>
+
+
         // window.setInterval(loadDatagrid_pro, 100);
         function loadDatagrid_pro(params) {
             $("#productList").datagrid({
@@ -17,7 +19,7 @@
                 loader: function (params, success, error) {
                     $.ajax({
                         type: 'post',
-                        url: '../../test/getAppInfo',
+                        url: '../../base/getAppInfoAll',
                         dataType: 'json',
                         contentType: 'application/json;charset=utf-8', // 设置请求头信息
                         data: JSON.stringify(params),
@@ -48,6 +50,16 @@
                     {field: 'remainOplog', title: "未上传记录数量", width: 400, align: "left"},
                     {field: 'remainRecord', title: "未上传文件数量", width: 400, align: "left"},
                     {field: 'remainUpFile', title: "未上传操作日志数量", width: 400, align: "left"},
+                    {
+                        field: 'opt',
+                        title: '操作',
+                        width: 600,
+                        align: "left",
+                        formatter: function (value, row, index) {
+                            var context = "<input  type='file'>" + "<a id='btnFile' href='#' onclick='checkOption(" + index + "," + value + ")' style='color: #1075bb'>升级设备</a>";
+                            return context;
+                        }
+                    }
                 ]],
                 toolbar: '#wu_toolbar',
                 pagination: true,//向后台传递参数page 和rows
@@ -91,31 +103,24 @@
             });
         }
 
-        function checkOption(index, val) {
-            $('#productList').datagrid('endEdit', index);
-            var rows = $('#productList').datagrid('getRows');
-            var row = rows[index];
-            console.log(row)
-            $.messager.confirm('提示框', '您确认修改此行数据吗？', function (r) {
+        $("#btnFile").click(function () {
+            $.messager.confirm('提示框', '您确认上传图片，并上传查找厂商？', function (r) {
                 if (r) {
-                    $.ajax({
-                        type: "post",
-                        url: '../../v1/conf/updateOption',
-                        data: JSON.stringify(row),
-                        dataType: "json",
-                        contentType: 'application/json;charset=utf-8',
-                        success: function (data) {
-                            $.messager.alert('提示框', data.msg, 'info');
-                            refreshDatagrid();
+                    let path = "../../v1/conf/getFactoryByUploadImg";
+                    $("#form1").form("submit", {
+                        url: path,
+                        onSubmit: function (param) {
                         },
-                        error: function (data) {
-                            $.messager.alert('提示框', data.msg, 'error');
+                        success: function (data) {
+                            var eval1 = eval("(" + data + ")");
+                            console.log(eval1);
+                            $.messager.alert('提示框', eval1.msg + "[" + eval1.data + "]", 'info');
                         }
                     });
                 }
             });
-        }
 
+        });
         function searchSubmit() {
             var params = {
                 //findcode: $("#findcode").val(),

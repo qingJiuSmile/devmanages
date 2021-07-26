@@ -17,7 +17,7 @@
                 loader: function (params, success, error) {
                     $.ajax({
                         type: 'post',
-                        url: '../../test/getInfo',
+                        url: '../../base/getInfoAll',
                         dataType: 'json',
                         contentType: 'application/json;charset=utf-8', // 设置请求头信息
                         data: JSON.stringify(params),
@@ -64,10 +64,10 @@
                     {
                         field: 'opt',
                         title: '操作',
-                        width: 200,
+                        width: 500,
                         align: "center",
                         formatter: function (value, row, index) {
-                            var context = "<a href='#' onclick='updateOption(" + index + "," + value + ")' style='color: #1075bb'>重启设备</a>"
+                            var context = "<a href='#' onclick='updateOption(" + index + "," + value + ")' style='color: #1075bb'>重启设备</a>&nbsp;&nbsp;&nbsp;&nbsp;"
                             return context;
                         }
                     }
@@ -76,7 +76,7 @@
                 pagination: true,//向后台传递参数page 和rows
                 pageNumber: 1,
                 pageSize: 20,
-                pageList: [20, 30, 40],
+                pageList: [5,20, 30, 40],
                 onLoadError: function (data) {  //发生错误时提示信息
                     $.messager.alert('错误', data, 'error');
                 },
@@ -89,6 +89,16 @@
             });
         }
 
+       function addProduct(index) {
+           $('#win').window({
+               title:"设备记录",
+               width:700,
+               height:600,
+               minimizable:false,
+               modal:true,
+               href:"deviceRecordList.html"
+           });
+       }
         function updateOption(index, val) {
             $('#productList').datagrid('endEdit', index);
             var rows = $('#productList').datagrid('getRows');
@@ -98,7 +108,7 @@
                 if (r) {
                     $.ajax({
                         type: "get",
-                        url: '../../test/restartTheDevice/'+ row.devIp,
+                        url: '../../base/restartTheDevice/'+ row.devIp,
                         contentType: 'application/json;charset=utf-8',
                         success: function (data) {
                             $.messager.alert('提示框', data.msg, 'info');
@@ -162,9 +172,9 @@
             });
         })
 
-        function addProduct() {
+     /*   function addProduct() {
             parent.addTabs("", "");
-        }
+        }*/
 
         function refreshDatagrid() {
             $("#productList").datagrid('reload');

@@ -14,12 +14,6 @@ import java.util.List;
 @Data
 public class AppInfoEntity {
 
-    private String msg;
-
-    private Integer code;
-
-    private AppInfoData data;
-
     private List<?> rows;
 
     private Integer total; //总数量

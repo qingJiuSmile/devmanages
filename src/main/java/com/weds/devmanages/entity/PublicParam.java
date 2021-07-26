@@ -20,4 +20,8 @@ public class PublicParam {
 
     private Integer total;
 
+    public PublicParam() {
+        page = 1;
+        rows = 20;
+    }
 }

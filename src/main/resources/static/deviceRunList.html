@@ -17,7 +17,7 @@
                 loader: function (params, success, error) {
                     $.ajax({
                         type: 'post',
-                        url: '../../test/getRunInfo',
+                        url: '../../base/getRunInfoAll',
                         dataType: 'json',
                         contentType: 'application/json;charset=utf-8', // 设置请求头信息
                         data: JSON.stringify(params),
