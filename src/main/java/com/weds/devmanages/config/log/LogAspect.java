@@ -16,11 +16,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Objects;
 
-/**
- * 日志切面
- *
- * @date 2018/12/21 15:00
- */
 @Aspect
 @Component
 @Slf4j
