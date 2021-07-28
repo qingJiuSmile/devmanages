@@ -10,8 +10,6 @@ import java.text.SimpleDateFormat;
 
 /**
  * 序列化器
- * @author CaoHeYang
- * @date 20150915
  */
 public class ExtandObjectMapper extends ObjectMapper{
 	private static final long serialVersionUID = 4402127997078513582L;

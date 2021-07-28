@@ -9,7 +9,6 @@ import java.io.Serializable;
 /**
  * 默认code为成功
  * 
- * @author caoheyang
  *
  */
 @ApiModel

@@ -1,7 +1,10 @@
 package com.weds.devmanages.util;
+import lombok.extern.slf4j.Slf4j;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
- 
+
+@Slf4j
 public class HMACSHA256 {
  
     /**
@@ -36,7 +39,7 @@ public class HMACSHA256 {
             byte[] bytes = sha256_HMAC.doFinal(message.getBytes());
             hash = byteArrayToHexString(bytes);
         } catch (Exception e) {
-            System.out.println("Error HmacSHA256 ===========" + e.getMessage());
+            log.error("Error HmacSHA256 ===========" + e.getMessage());
         }
         return hash;
     }

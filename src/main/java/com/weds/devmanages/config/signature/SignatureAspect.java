@@ -1,11 +1,11 @@
-package com.weds.devmanages.util.signature;
+package com.weds.devmanages.config.signature;
 
-import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
@@ -28,11 +28,21 @@ public class SignatureAspect {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SignatureAspect.class);
 
-    @Around("execution(* com.weds.devmanages.controller..*.*(..))"
-    )
+
+    /*  @Pointcut("execution(* com.weds.devmanages.controller..*.*(..))")
+      private void signAspect() {
+      }
+    */
+
+    @Pointcut("(@annotation(com.weds.devmanages.service.sign.Signature))")
+    private void signAspect() {
+    }
+
+
+    @Around("signAspect()")
     public Object doAround(ProceedingJoinPoint pjp) throws Throwable {
         try {
-            this.checkSign(pjp);
+            this.checkSign();
             return pjp.proceed();
         } catch (Throwable e) {
             LOGGER.error("SignatureAspect>>>>>>>>", e);
@@ -40,26 +50,27 @@ public class SignatureAspect {
         }
     }
 
-    private void checkSign(ProceedingJoinPoint pjp) throws Exception {
+    private void checkSign() throws Exception {
         HttpServletRequest request = ((ServletRequestAttributes) (RequestContextHolder.currentRequestAttributes())).getRequest();
-        String oldSign = request.getHeader("X-SIGN");
-        if (StringUtils.isBlank(oldSign)) {
-            throw new RuntimeException("取消签名Header[X-SIGN]信息");
+        String oldSign = request.getHeader("WEDS-SIGN");
+        String appId = request.getHeader("appId");
+        String appSecret = request.getHeader("appSecret");
+        if (StringUtils.isBlank(oldSign) || StringUtils.isBlank(appId) || StringUtils.isBlank(appSecret)) {
+            throw new RuntimeException("Header缺少必要验证参数");
         }
         //获取body（对应@RequestBody）
         String body = null;
-        if (request instanceof MyRequestWrapper) {
+        if (request instanceof RequestWrapper) {
             body = IOUtils.toString(request.getInputStream(), StandardCharsets.UTF_8);
         }
 
-        //  System.out.println("===============>"+);
-        //获取parameters（对应@RequestParam）
+        // 获取parameters（对应@RequestParam）
         Map<String, String[]> params = null;
         if (!CollectionUtils.isEmpty(request.getParameterMap())) {
             params = request.getParameterMap();
         }
 
-        //获取path variable（对应@PathVariable）
+        // 获取path variable（对应@PathVariable）
         String[] paths = null;
         ServletWebRequest webRequest = new ServletWebRequest(request, null);
         Map<String, String> uriTemplateVars = (Map<String, String>) webRequest.getAttribute(
@@ -68,7 +79,8 @@ public class SignatureAspect {
             paths = uriTemplateVars.values().toArray(new String[]{});
         }
         try {
-            String newSign = SignUtil.sign(body, params, paths);
+            String newSign = SignUtil.sign(body, params, paths,appSecret);
+            LOGGER.info("签名为 ==>" + newSign);
             if (!newSign.equals(oldSign)) {
                 throw new RuntimeException("签名不一致...");
             }
