@@ -29,12 +29,8 @@ public class RequestWrapper extends HttpServletRequestWrapper {
      * @param request request
      * @return String
      */
-    public String getBodyString(final ServletRequest request) {
-        try {
+    public String getBodyString(final ServletRequest request) throws IOException {
             return inputStream2String(request.getInputStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     /**
@@ -42,7 +38,7 @@ public class RequestWrapper extends HttpServletRequestWrapper {
      *
      * @return String
      */
-    public String getBodyString() {
+    public String getBodyString() throws IOException {
         final InputStream inputStream = new ByteArrayInputStream(body);
 
         return inputStream2String(inputStream);
@@ -54,27 +50,15 @@ public class RequestWrapper extends HttpServletRequestWrapper {
      * @param inputStream inputStream
      * @return String
      */
-    private String inputStream2String(InputStream inputStream) {
+    private String inputStream2String(InputStream inputStream) throws IOException {
         StringBuilder sb = new StringBuilder();
         BufferedReader reader = null;
 
-        try {
-            reader = new BufferedReader(new InputStreamReader(inputStream, Charset.defaultCharset()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                }
-            }
+        reader = new BufferedReader(new InputStreamReader(inputStream, Charset.defaultCharset()));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            sb.append(line);
         }
-
         return sb.toString();
     }
 

@@ -1,21 +1,20 @@
 package com.weds.devmanages.controller;
 
-import com.weds.devmanages.service.sign.Signature;
+import com.weds.devmanages.base.BaseClass;
+import com.weds.devmanages.config.log.JsonResult;
 import lombok.Data;
 import org.apache.commons.lang.builder.ToStringBuilder;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("example")
-public class ExampleController {
+@RequestMapping("/example")
+public class ExampleController extends BaseClass {
 
-    @PostMapping(value = "test/{var1}/{var2}", produces = MediaType.ALL_VALUE)
-    @Signature
-    public String myController(@PathVariable String var1, @PathVariable String var2,
-                               @RequestParam String var3, @RequestParam String var4, @RequestBody User user) {
-
-        return String.join(",", var1, var2, var3, var4, user.toString());
+    @PostMapping(value = "/test/{var1}/{var2}")
+    public JsonResult<String> myController(@PathVariable String var1, @PathVariable String var2,
+                                   @RequestParam String var3, @RequestParam String var4, @RequestBody User user) {
+        System.out.println("==============================");
+        return succMsg();
     }
 
     @Data

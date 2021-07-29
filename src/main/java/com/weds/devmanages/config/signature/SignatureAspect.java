@@ -1,11 +1,10 @@
 package com.weds.devmanages.config.signature;
 
+import com.weds.devmanages.config.log.JsonResult;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
@@ -22,7 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Aspect
-@Component
+//@Component
 @Order(1)
 public class SignatureAspect {
 
@@ -39,15 +38,9 @@ public class SignatureAspect {
     }
 
 
-    @Around("signAspect()")
-    public Object doAround(ProceedingJoinPoint pjp) throws Throwable {
-        try {
-            this.checkSign();
-            return pjp.proceed();
-        } catch (Throwable e) {
-            LOGGER.error("SignatureAspect>>>>>>>>", e);
-            throw e;
-        }
+    @Before("signAspect()")
+    public void doBefore() throws Throwable {
+        checkSign();
     }
 
     private void checkSign() throws Exception {
@@ -56,7 +49,7 @@ public class SignatureAspect {
         String appId = request.getHeader("appId");
         String appSecret = request.getHeader("appSecret");
         if (StringUtils.isBlank(oldSign) || StringUtils.isBlank(appId) || StringUtils.isBlank(appSecret)) {
-            throw new RuntimeException("Header缺少必要验证参数");
+            throw new Exception("Header缺少必要验证参数");
         }
         //获取body（对应@RequestBody）
         String body = null;
@@ -75,17 +68,16 @@ public class SignatureAspect {
         ServletWebRequest webRequest = new ServletWebRequest(request, null);
         Map<String, String> uriTemplateVars = (Map<String, String>) webRequest.getAttribute(
                 HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
+
         if (!CollectionUtils.isEmpty(uriTemplateVars)) {
             paths = uriTemplateVars.values().toArray(new String[]{});
         }
-        try {
-            String newSign = SignUtil.sign(body, params, paths,appSecret);
-            LOGGER.info("签名为 ==>" + newSign);
-            if (!newSign.equals(oldSign)) {
-                throw new RuntimeException("签名不一致...");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("验签出错...", e);
+
+        String newSign = SignUtil.sign(body, params, paths, appSecret);
+        LOGGER.info("签名为 ==>" + newSign);
+        if (!newSign.equals(oldSign)) {
+            throw new Exception("签名不一致...");
         }
     }
+
 }

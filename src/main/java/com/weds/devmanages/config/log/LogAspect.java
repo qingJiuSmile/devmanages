@@ -2,6 +2,7 @@ package com.weds.devmanages.config.log;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
@@ -21,9 +22,13 @@ import java.util.Objects;
 @Slf4j
 public class LogAspect {
 
-    @Pointcut("(@annotation(org.springframework.web.bind.annotation.RequestMapping)) " +
+   /* @Pointcut("(@annotation(org.springframework.web.bind.annotation.RequestMapping)) " +
             "|| (@annotation(org.springframework.web.bind.annotation.GetMapping)) " +
             "|| (@annotation(org.springframework.web.bind.annotation.PostMapping)) ")
+    private void logAspect() {
+    }*/
+
+    @Pointcut("execution(* com.weds.devmanages.controller..*.*(..))")
     private void logAspect() {
     }
 
@@ -112,7 +117,7 @@ public class LogAspect {
             try {
                 object = pjp.proceed();
             } catch (Exception e) {
-                log.error("  occurs exception ", e      );
+                log.error("  occurs exception ", e);
             } catch (Throwable throwable) {
                 log.error("  occurs throwable ", throwable);
             }
@@ -120,6 +125,7 @@ public class LogAspect {
         return object;
     }
 
+    @EqualsAndHashCode(callSuper = true)
     @Data
     public class CommonException extends Exception {
 
@@ -127,12 +133,12 @@ public class LogAspect {
 
         private String msg;
 
-        public CommonException(Integer code,String msg){
+        public CommonException(Integer code, String msg) {
             this.code = code;
             this.msg = msg;
         }
 
-        public CommonException(){
+        public CommonException() {
             this.code = 400;
             this.msg = "异常";
         }
