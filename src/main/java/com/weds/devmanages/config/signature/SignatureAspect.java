@@ -28,14 +28,13 @@ public class SignatureAspect {
     private static final Logger LOGGER = LoggerFactory.getLogger(SignatureAspect.class);
 
 
-    /*  @Pointcut("execution(* com.weds.devmanages.controller..*.*(..))")
+      @Pointcut("execution(* com.weds.devmanages.controller..*.*(..))")
       private void signAspect() {
       }
-    */
 
-    @Pointcut("(@annotation(com.weds.devmanages.service.sign.Signature))")
+    /*@Pointcut("(@annotation(com.weds.devmanages.service.sign.Signature))")
     private void signAspect() {
-    }
+    }*/
 
 
     @Before("signAspect()")
