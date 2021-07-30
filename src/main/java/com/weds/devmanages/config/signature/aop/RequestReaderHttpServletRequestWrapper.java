@@ -1,4 +1,4 @@
-package com.weds.devmanages.config.signature.other;
+package com.weds.devmanages.config.signature.aop;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;

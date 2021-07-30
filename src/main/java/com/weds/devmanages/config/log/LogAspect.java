@@ -22,15 +22,12 @@ import java.util.Objects;
 @Slf4j
 public class LogAspect {
 
-   /* @Pointcut("(@annotation(org.springframework.web.bind.annotation.RequestMapping)) " +
+    @Pointcut("(@annotation(org.springframework.web.bind.annotation.RequestMapping)) " +
             "|| (@annotation(org.springframework.web.bind.annotation.GetMapping)) " +
             "|| (@annotation(org.springframework.web.bind.annotation.PostMapping)) ")
     private void logAspect() {
-    }*/
-
-    @Pointcut("execution(* com.weds.devmanages.controller..*.*(..))")
-    private void logAspect() {
     }
+
 
     /**
      * 日志切面

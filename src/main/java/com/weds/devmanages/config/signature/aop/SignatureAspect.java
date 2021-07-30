@@ -1,14 +1,13 @@
-package com.weds.devmanages.config.signature;
+package com.weds.devmanages.config.signature.aop;
 
-import com.weds.devmanages.config.log.JsonResult;
+import com.weds.devmanages.config.signature.RequestWrapper;
+import com.weds.devmanages.config.signature.SignUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -28,9 +27,9 @@ public class SignatureAspect {
     private static final Logger LOGGER = LoggerFactory.getLogger(SignatureAspect.class);
 
 
-      @Pointcut("execution(* com.weds.devmanages.controller..*.*(..))")
-      private void signAspect() {
-      }
+    @Pointcut("execution(* com.weds.devmanages.controller..*.*(..))")
+    private void signAspect() {
+    }
 
     /*@Pointcut("(@annotation(com.weds.devmanages.service.sign.Signature))")
     private void signAspect() {
@@ -72,7 +71,7 @@ public class SignatureAspect {
             paths = uriTemplateVars.values().toArray(new String[]{});
         }
 
-        String newSign = SignUtil.sign(body, params, paths, appSecret);
+        String newSign = SignUtil.sign(body, params, paths, appId, appSecret, System.currentTimeMillis() + "");
         LOGGER.info("签名为 ==>" + newSign);
         if (!newSign.equals(oldSign)) {
             throw new Exception("签名不一致...");

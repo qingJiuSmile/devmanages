@@ -1,5 +1,6 @@
 package com.weds.devmanages.entity.config;
 
+import com.weds.devmanages.entity.SignatureEntity;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -9,7 +10,7 @@ import lombok.Data;
  * @author tjy
  **/
 @Data
-public class DevPwdConfig {
+public class DevPwdConfig extends SignatureEntity {
 
     @ApiModelProperty("是否开启门禁密码 1开启 0关闭")
     private Integer enSuperPwd;

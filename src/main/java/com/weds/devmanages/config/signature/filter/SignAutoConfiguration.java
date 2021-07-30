@@ -1,6 +1,5 @@
-package com.weds.devmanages.config.signature;
+package com.weds.devmanages.config.signature.filter;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +10,6 @@ import org.springframework.context.annotation.Configuration;
  * @author tjy
  **/
 @Configuration
-@ConditionalOnExpression("${weds.check: true }")
 public class SignAutoConfiguration {
 
     @Bean
@@ -24,7 +22,7 @@ public class SignAutoConfiguration {
         FilterRegistrationBean registration = new FilterRegistrationBean();
         registration.setFilter(initSignFilter());
         registration.setName("signFilter");
-        registration.addUrlPatterns("/base/*", "/config/*", "/mode/*", "/deviceRecord/*", "/example/*");
+        registration.addUrlPatterns("/*");
         registration.setOrder(0);
         return registration;
     }

@@ -1,6 +1,7 @@
 package com.weds.devmanages.entity.mode;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import com.weds.devmanages.entity.SignatureEntity;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -11,7 +12,7 @@ import lombok.Data;
  **/
 
 @Data
-public class LinkMode {
+public class LinkMode extends SignatureEntity{
 
     @ApiModelProperty("模式:0=sdk,1=http,2=mqtt,3=websocket")
     private Integer linkMode;

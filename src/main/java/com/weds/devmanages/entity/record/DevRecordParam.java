@@ -1,5 +1,6 @@
 package com.weds.devmanages.entity.record;
 
+import com.weds.devmanages.entity.SignatureEntity;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -9,7 +10,7 @@ import lombok.Data;
  * @author tjy
  **/
 @Data
-public class DevRecordParam {
+public class DevRecordParam extends SignatureEntity {
 
     private String devIp;
 

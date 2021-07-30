@@ -8,7 +8,7 @@ import lombok.Data;
  * @author tjy
  **/
 @Data
-public class PublicParam {
+public class PublicParam extends SignatureEntity {
 
     private Integer page;
 

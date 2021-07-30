@@ -12,14 +12,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/register")
 public class DevRegisterController {
 
-
     @Autowired
     private DevRegister devRegister;
 
     @ApiOperation("设备注册,多个ip密码相同，使用','分隔")
     @PostMapping("/devRegister")
     public JsonResult<String> configureTheDevicePwd(@RequestParam(value = "pwd") String pwd,
-                                                     @RequestParam(value = "devIp") String devIp) {
+                                                    @RequestParam(value = "devIp") String devIp) {
         return devRegister.register(devIp, pwd);
     }
 }

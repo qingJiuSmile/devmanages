@@ -2,6 +2,7 @@ package com.weds.devmanages.entity.config;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.weds.devmanages.entity.SignatureEntity;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -13,7 +14,7 @@ import java.time.LocalTime;
  * @author tjy
  **/
 @Data
-public class DevStdConfig {
+public class DevStdConfig extends SignatureEntity {
 
     @ApiModelProperty("是否开启指示灯")
     private Boolean led;

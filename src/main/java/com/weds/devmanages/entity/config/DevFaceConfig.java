@@ -1,6 +1,7 @@
 package com.weds.devmanages.entity.config;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import com.weds.devmanages.entity.SignatureEntity;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -10,7 +11,7 @@ import lombok.Data;
  * @author tjy
  **/
 @Data
-public class DevFaceConfig {
+public class DevFaceConfig extends SignatureEntity{
 
     /**
      * -distance：Integer（识别距离 厘米）

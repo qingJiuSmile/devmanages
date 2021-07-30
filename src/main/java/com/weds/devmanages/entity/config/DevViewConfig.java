@@ -1,6 +1,7 @@
 package com.weds.devmanages.entity.config;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import com.weds.devmanages.entity.SignatureEntity;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -10,7 +11,7 @@ import lombok.Data;
  * @author tjy
  **/
 @Data
-public class DevViewConfig {
+public class DevViewConfig extends SignatureEntity {
 
     /**
      * -enGoodVoice：Integer（0-禁用，1-识别成功后，播放上午好等问候语）

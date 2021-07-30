@@ -1,6 +1,8 @@
 package com.weds.devmanages.entity.mode;
 
+import cn.hutool.crypto.asymmetric.Sign;
 import com.alibaba.fastjson.annotation.JSONField;
+import com.weds.devmanages.entity.SignatureEntity;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -10,7 +12,7 @@ import lombok.Data;
  * @author tjy
  **/
 @Data
-public class DevNet {
+public class DevNet extends SignatureEntity {
 
     /**
      * -useDhcp： Boolean（是否为DHCP）

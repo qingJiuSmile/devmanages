@@ -1,4 +1,4 @@
-package com.weds.devmanages.config.signature.other;
+package com.weds.devmanages.config.signature.aop;
 
 import org.springframework.context.annotation.Bean;
 
