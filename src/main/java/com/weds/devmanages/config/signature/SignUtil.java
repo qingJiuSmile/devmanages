@@ -42,10 +42,11 @@ public class SignUtil {
             JSONObject jsonObject = JSONObject.parseObject(body);
             SortedMap<String, Object> treeMap = new TreeMap<>();
             jsonObject.forEach(treeMap::put);
-            sb.append(createSign(treeMap, appSecret)).append("_");
+            sb.append(createSign(treeMap, appSecret));
         }
 
         if (!CollectionUtils.isEmpty(params)) {
+            sb.append("_");
             params.entrySet()
                     .stream()
                     .sorted(Map.Entry.comparingByKey())
@@ -58,7 +59,7 @@ public class SignUtil {
         if (ArrayUtils.isNotEmpty(paths)) {
             sb.append("_");
             String pathValues = String.join(",", Arrays.stream(paths).sorted().toArray(String[]::new));
-            sb.append(pathValues).append("_");
+            sb.append(pathValues);
         }
         sb.append("appId=").append(appId).append("appSecret=").append(appSecret).append("timestamp=").append(timestamp);
         log.info("加密前  ==> [{}]", sb.toString());
@@ -170,14 +171,14 @@ public class SignUtil {
         map.put("appSecret", 5);
         map.put("timestamp","123");
         Map<String, String[]> params = new HashMap<>();
-      /*  params.put("var3", new String[]{"3"});
-        params.put("var4", new String[]{"4"});*/
+        params.put("var4", new String[]{"4"});
+        params.put("var3", new String[]{"3"});
 
         String[] paths = new String[]{"10.17.1.126"};
         long ks = System.currentTimeMillis();
         System.out.println(System.currentTimeMillis());
 
-        System.out.println(sign(map.isEmpty() ? null : JSONObject.toJSONString(map), null, null, "321", "123", ks + ""));
+        System.out.println(sign(map.isEmpty() ? null : JSONObject.toJSONString(map), params, paths, "321", "123", ks + ""));
 
     }
 
