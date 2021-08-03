@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.weds.devmanages.entity.N8RequestEntity;
 import com.weds.devmanages.service.DevBase;
 import com.weds.devmanages.service.impl.base.DevBaseImpl;
+import com.weds.devmanages.service.pay.PayTest;
 import com.weds.devmanages.util.RedisUtil;
 import com.weds.devmanages.util.RestTemplateUtils;
 import org.junit.jupiter.api.Test;
@@ -39,8 +40,12 @@ class DevmanagesApplicationTests {
     private RestTemplateUtils  restTemplateUtils;
 
 
+
+    @Autowired
+    private PayTest payTest;
+
     @Test
-    void  contes(){
+    void  contes() throws Exception {
         /**
          * ymAppId:2011031649342027
          * appid:2009032008460272310
@@ -50,6 +55,8 @@ class DevmanagesApplicationTests {
          * JfoxXGR2FWvyLt2au+j6/HS85VJEkGxvAP003rUMuJZgD+4iZTUUqQDq939ZzIMJ
          * GSr2/3OBgiQERt9rkQIDAQAB
          */
+
+        payTest.testPay();
 
     }
 
