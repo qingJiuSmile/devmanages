@@ -38,6 +38,21 @@ class DevmanagesApplicationTests {
     @Autowired
     private RestTemplateUtils  restTemplateUtils;
 
+
+    @Test
+    void  contes(){
+        /**
+         * ymAppId:2011031649342027
+         * appid:2009032008460272310
+         * cp_code:yiyun
+         * 签名公钥:MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDbicqzabDYMeXzTdHMaRqMAM6e
+         * 2hqfzJrF1AkNyNW7G0sAlkypppqqYf68FINedcN3W4GNbjxXi83rzeqO6HOwpp5a
+         * JfoxXGR2FWvyLt2au+j6/HS85VJEkGxvAP003rUMuJZgD+4iZTUUqQDq939ZzIMJ
+         * GSr2/3OBgiQERt9rkQIDAQAB
+         */
+
+    }
+
     @Test
     void contextLoads() {
      /*String name = "RABBITMQ:GATINGRECORD:maxId";

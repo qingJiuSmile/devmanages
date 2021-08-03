@@ -2,6 +2,9 @@ package com.weds.devmanages.service;
 
 import com.weds.devmanages.config.log.JsonResult;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * 设备注册
  *
@@ -16,5 +19,5 @@ public interface DevRegister {
      * @param pwd   设备密码
      * @return {@link boolean}
      **/
-    JsonResult<String> register(String devIp, String pwd);
+    JsonResult<List<Map<String, Object>>> register(String devIp, String pwd);
 }

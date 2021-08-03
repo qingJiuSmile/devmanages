@@ -15,7 +15,7 @@ public class RequestWrapper extends HttpServletRequestWrapper {
      */
     private final byte[] body;
 
-    public RequestWrapper(HttpServletRequest request) throws IOException {
+    public  RequestWrapper(HttpServletRequest request) throws IOException {
         super(request);
 
         // 将body数据存储起来

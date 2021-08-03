@@ -10,7 +10,7 @@ import lombok.Data;
  * @author tjy
  **/
 @Data
-public class DevRecordParam extends SignatureEntity {
+public class    DevRecordParam extends SignatureEntity {
 
     private String devIp;
 

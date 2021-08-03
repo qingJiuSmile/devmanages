@@ -232,9 +232,9 @@ public class DevBaseImpl implements DevBase, DevRestart {
     public boolean reStart(String ip) {
         // 拼接接口地址
         String url = REQUEST_PREFIX + ip + "/config/reboot";
-        // 登录设备
+        /*// 登录设备
         boolean login = refreshToken(ip);
-        log.info("登录 ==>[{}]", login);
+        log.info("登录 ==>[{}]", login);*/
         JSONObject body = restTemplateUtils.post(url, addHeader(ip), null, JSONObject.class, new HashMap<>()).getBody();
         log.info("设备 [{}] 重启 [{}]", ip, body);
         if (body == null) {

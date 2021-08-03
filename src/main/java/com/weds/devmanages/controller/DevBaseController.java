@@ -6,6 +6,7 @@ import com.weds.devmanages.config.log.JsonResult;
 import com.weds.devmanages.entity.*;
 import com.weds.devmanages.entity.record.RecordEntity;
 import com.weds.devmanages.service.impl.base.DevBaseImpl;
+import com.weds.devmanages.service.sign.Signature;
 import com.weds.devmanages.util.Base64Utils;
 import com.weds.devmanages.util.IpConfig;
 import io.swagger.annotations.Api;
@@ -42,6 +43,7 @@ public class DevBaseController extends BaseClass {
 
     @ApiOperation("获取某台设备硬件系统信息")
     @PostMapping("/getInfo/{ip}")
+    @Signature
     public JsonResult<SysInfoEntity.SysData> getInfo(@PathVariable String ip) {
 
         if (StringUtils.isBlank(ip)) {
@@ -64,6 +66,7 @@ public class DevBaseController extends BaseClass {
 
     @ApiOperation("获取某台设备应用信息")
     @PostMapping("/getAppInfo/{ip}")
+    @Signature
     public JsonResult<AppInfoEntity.AppInfoData> getAppInfo(@PathVariable String ip) {
 
         if (StringUtils.isBlank(ip)) {
@@ -86,6 +89,7 @@ public class DevBaseController extends BaseClass {
 
     @ApiOperation("获取某台设备运行信息")
     @PostMapping("/getRunInfo/{ip}")
+    @Signature
     public JsonResult<RunInfoEntity.RunInfoData> getRunInfo(@PathVariable String ip) {
 
         if (StringUtils.isBlank(ip)) {
@@ -123,6 +127,7 @@ public class DevBaseController extends BaseClass {
 
     @ApiOperation("重启设备")
     @GetMapping("/restartTheDevice/{ip}")
+    @Signature
     public JsonResult<Boolean> restartTheDevice(@PathVariable String ip) {
         if (StringUtils.isBlank(ip)) {
             return failMsg("设备ip为空");
@@ -136,6 +141,7 @@ public class DevBaseController extends BaseClass {
 
     @ApiOperation("升级设备文件")
     @PostMapping("/deviceUpdate/{ip}")
+    @Signature
     public JsonResult<Boolean> deviceUpdate(@PathVariable String ip, @RequestParam MultipartFile file) {
         if (StringUtils.isBlank(ip)) {
             return failMsg("设备ip为空");
@@ -148,6 +154,7 @@ public class DevBaseController extends BaseClass {
 
     @ApiOperation(value = "获取设备信息", hidden = true)
     @PostMapping("/getDevRecord/{ip}")
+    @Signature
     public JsonResult<RecordEntity.RecordData> getDevRecord(@PathVariable String ip, @RequestBody PublicParam search) {
         if (StringUtils.isBlank(ip)) {
             return failMsg("设备ip为空");
@@ -161,6 +168,7 @@ public class DevBaseController extends BaseClass {
 
     @ApiOperation("获取设备开机照片")
     @PostMapping("/getStartUpImg/{ip}")
+    @Signature
     public JsonResult<StartUpImg> getStartUpImg(@PathVariable String ip) {
         if (StringUtils.isBlank(ip)) {
             return failMsg("设备ip为空");
@@ -173,6 +181,7 @@ public class DevBaseController extends BaseClass {
 
     @ApiOperation("设置设备开机照片")
     @PostMapping("/importStartUpImg/{ip}")
+    @Signature
     public JsonResult<Boolean> importStartUpImg(@PathVariable String ip, MultipartFile file) {
 
         // TODO 限制同一时间只能有一人进行图片设置
@@ -237,6 +246,7 @@ public class DevBaseController extends BaseClass {
 
     @ApiOperation("删除设备开机照片")
     @PostMapping("/deleteStartUpImg/{ip}")
+    @Signature
     public JsonResult<Boolean> deleteStartUpImg(@PathVariable String ip) {
 
         if (StringUtils.isBlank(ip)) {
@@ -250,6 +260,7 @@ public class DevBaseController extends BaseClass {
 
     @ApiOperation("设备时间校准 (设备自带校时，此功能无效)")
     @PostMapping("/setTime/{ip}")
+    @Signature
     public JsonResult<Boolean> setTime(@PathVariable String ip) {
 
         if (StringUtils.isBlank(ip)) {

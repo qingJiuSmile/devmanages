@@ -7,6 +7,7 @@ import com.weds.devmanages.entity.config.DevPwdConfig;
 import com.weds.devmanages.entity.config.DevStdConfig;
 import com.weds.devmanages.entity.config.DevViewConfig;
 import com.weds.devmanages.service.DevConfiguration;
+import com.weds.devmanages.service.sign.Signature;
 import com.weds.devmanages.util.IpConfig;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @Api(tags = "设备配置", description = "设备配置")
 @RequestMapping("/config")
 @RestController
+@Signature
 public class DevConfigurationController extends BaseClass {
 
     @Autowired

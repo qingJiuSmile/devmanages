@@ -1,4 +1,5 @@
 package com.weds.devmanages.util;
+
 import lombok.extern.slf4j.Slf4j;
 
 import javax.crypto.Mac;
@@ -6,17 +7,17 @@ import javax.crypto.spec.SecretKeySpec;
 
 @Slf4j
 public class HMACSHA256 {
- 
+
     /**
      * 将加密后的字节数组转换成字符串
      *
      * @param b 字节数组
      * @return 字符串
      */
-    public  static String byteArrayToHexString(byte[] b) {
+    public static String byteArrayToHexString(byte[] b) {
         StringBuilder hs = new StringBuilder();
         String stmp;
-        for (int n = 0; b!=null && n < b.length; n++) {
+        for (int n = 0; b != null && n < b.length; n++) {
             stmp = Integer.toHexString(b[n] & 0XFF);
             if (stmp.length() == 1)
                 hs.append('0');
@@ -24,8 +25,10 @@ public class HMACSHA256 {
         }
         return hs.toString().toLowerCase();
     }
+
     /**
      * sha256_HMAC加密
+     *
      * @param message 消息
      * @param secret  秘钥
      * @return 加密后字符串
@@ -43,6 +46,6 @@ public class HMACSHA256 {
         }
         return hash;
     }
- 
- 
+
+
 }

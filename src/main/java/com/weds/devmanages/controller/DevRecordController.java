@@ -4,6 +4,7 @@ import com.weds.devmanages.base.BaseClass;
 import com.weds.devmanages.config.log.JsonResult;
 import com.weds.devmanages.entity.record.*;
 import com.weds.devmanages.service.DevRecord;
+import com.weds.devmanages.service.sign.Signature;
 import com.weds.devmanages.util.IpConfig;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @Api(tags = "设备档案记录", description = "设备档案记录")
 @RestController
 @RequestMapping("/deviceRecord")
+@Signature
 public class DevRecordController extends BaseClass {
 
     @Autowired

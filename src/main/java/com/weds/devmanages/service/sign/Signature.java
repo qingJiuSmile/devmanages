@@ -12,27 +12,13 @@ import static java.lang.annotation.ElementType.TYPE;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@Target({TYPE, METHOD})
-
-@Retention(RUNTIME)
-
-@Documented
-
 /**
- *  签名注解
+ * 签名注解
+ *
  * @author tjy
  **/
+@Target({TYPE, METHOD})
+@Retention(RUNTIME)
+@Documented
 public @interface Signature {
-
-    // 按照order值排序
-    String ORDER_SORT = "ORDER_SORT";
-
-    // 字典序排序
-    String ALPHA_SORT = "ALPHA_SORT";
-
-    // 允许重复请求
-    boolean resubmit() default true;
-
-    String sort() default Signature.ALPHA_SORT;
-
 }

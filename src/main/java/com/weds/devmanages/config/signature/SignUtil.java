@@ -3,12 +3,16 @@ package com.weds.devmanages.config.signature;
 import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.crypto.digest.MD5;
 import com.alibaba.fastjson.JSONObject;
+import com.weds.devmanages.service.impl.DevRegisterImpl;
 import com.weds.devmanages.util.HMACSHA256;
 import com.weds.devmanages.util.LocalDateTimeUtils;
+import com.weds.devmanages.util.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -24,11 +28,13 @@ import java.util.regex.Pattern;
 import static java.util.regex.Pattern.compile;
 
 @Slf4j
+@Component
 public class SignUtil {
 
-    private static final int TIME_OUT = 60;
+    private static final int TIME_OUT = 60 * 5;
 
-    private static final String DEFAULT_SECRET = "weds@WSX#$%&";
+    @Autowired
+    private RedisUtil redisUtil;
 
     public static String sign(String body, Map<String, String[]> params, String[] paths, String appId, String appSecret, String timestamp) {
 
@@ -46,7 +52,9 @@ public class SignUtil {
         }
 
         if (!CollectionUtils.isEmpty(params)) {
-            sb.append("_");
+            if(StringUtils.isNotBlank(sb.toString())){
+                sb.append("_");
+            }
             params.entrySet()
                     .stream()
                     .sorted(Map.Entry.comparingByKey())
@@ -57,7 +65,9 @@ public class SignUtil {
         }
 
         if (ArrayUtils.isNotEmpty(paths)) {
-            sb.append("_");
+            if(StringUtils.isNotBlank(sb.toString())){
+                sb.append("_");
+            }
             String pathValues = String.join(",", Arrays.stream(paths).sorted().toArray(String[]::new));
             sb.append(pathValues);
         }
@@ -81,20 +91,24 @@ public class SignUtil {
                 sbKey.append(k).append("=").append(v).append("&");
             }
         }
-        sbKey = sbKey.append("key=").append(key);
+        sbKey.append("key=").append(key);
         //MD5加密,结果转换为大写字符
         log.info("排序后字段 ==>[{}]", sbKey);
         return MD5.create().digestHex(sbKey.toString()).toUpperCase();
     }
 
 
+    public void test() {
+    }
+
     /**
      * 检查校验参数签名
      *
      * @author tjy
      **/
-    public static void checkSign(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public void checkSign(HttpServletRequest request, HttpServletResponse response) throws Exception {
 
+        // 从header头获取配置
         String oldSign = request.getHeader("WEDS-SIGN");
         String appId = request.getHeader("appId");
         String appSecret = request.getHeader("appSecret");
@@ -108,16 +122,28 @@ public class SignUtil {
             throw new Exception("timestamp not a number");
         }
 
-        // 检查appId是否存在 TODO 查库/缓存/配置文件
-        if (!"321".equals(appId)) {
-            throw new Exception("appId not found");
+        // 检查appId与appSecret是否属于当前注册设备的范畴内； TODO 后期可能更换验证方式
+        boolean isSecret = false;
+        boolean isAppId = false;
+        Set<String> appIdKeys = redisUtil.getScanKeys(DevRegisterImpl.DEV_APP + "*:appId", -1);
+        Set<String> appSecretKeys = redisUtil.getScanKeys(DevRegisterImpl.DEV_APP + "*:appSecret", -1);
+        for (String scanKey : appIdKeys) {
+            if (redisUtil.get(scanKey).toString().equals(appId)) {
+                isAppId = true;
+                break;
+            }
         }
-        // 检查appSecret是否合法 TODO 查库/缓存/配置文件
-        if (!"123".equals(appSecret)) {
-            throw new Exception("appSecret not found");
+        for (String scanKey : appSecretKeys) {
+            if (redisUtil.get(scanKey).toString().equals(appSecret)) {
+                isSecret = true;
+                break;
+            }
+        }
+        if (!isAppId || !isSecret) {
+            throw new Exception("appId or appSecret does not exist");
         }
 
-        // 检查header头上的timestamp时间与当前时间对比是否超出5分钟
+        // 检查header头上的timestamp时间与当前时间对比是否超出1分钟
         long min = LocalDateTimeUtils.betweenTwoTime(LocalDateTimeUtil.of(Long.parseLong(timestamp)), LocalDateTime.now(), "second");
         log.info("时间戳对比 ==> [{}]", min);
         if (min > TIME_OUT) {
@@ -167,18 +193,18 @@ public class SignUtil {
     public static void main(String[] args) {
 
         Map<String, Object> map = new HashMap<>();
-        map.put("appId", 1);
+        /*map.put("appId", 1);
         map.put("appSecret", 5);
-        map.put("timestamp","123");
+        map.put("timestamp", "123");*/
         Map<String, String[]> params = new HashMap<>();
-        params.put("var4", new String[]{"4"});
-        params.put("var3", new String[]{"3"});
+        /*params.put("var4", new String[]{"4"});
+        params.put("var3", new String[]{"3"});*/
 
         String[] paths = new String[]{"10.17.1.126"};
         long ks = System.currentTimeMillis();
         System.out.println(System.currentTimeMillis());
 
-        System.out.println(sign(map.isEmpty() ? null : JSONObject.toJSONString(map), params, paths, "321", "123", ks + ""));
+        System.out.println(sign(map.isEmpty() ? null : JSONObject.toJSONString(map), params, paths, "410f3114596bcb7ef5c22c4ab6dc4c57", "MTYyNzg2NTg2ODU3N1dFRFMxMC4xNy4xLjEyNg==", ks + ""));
 
     }
 

@@ -5,6 +5,7 @@ import com.weds.devmanages.config.log.JsonResult;
 import com.weds.devmanages.entity.mode.DevNet;
 import com.weds.devmanages.entity.mode.LinkMode;
 import com.weds.devmanages.service.DevLinkMode;
+import com.weds.devmanages.service.sign.Signature;
 import com.weds.devmanages.util.IpConfig;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @Api(tags = "设备联机设置", description = "设备联机设置")
 @RequestMapping("/mode")
 @RestController
+@Signature
 public class DevLinkModeController extends BaseClass {
 
     @Autowired
