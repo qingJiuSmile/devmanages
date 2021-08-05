@@ -30,7 +30,7 @@ public class SignatureAspect {
     private DevRestart devRestart;
 
 
-    @Pointcut("(@annotation(com.weds.devmanages.service.sign.Signature))")
+    @Pointcut("(@annotation(com.weds.devmanages.service.sign.Signature)) || (@within(com.weds.devmanages.service.sign.Signature))")
     private void signAspect() {
     }
 

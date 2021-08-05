@@ -22,7 +22,7 @@ public class SignStreamFilter implements Filter {
         String contentType = req.getContentType();
         String method = "multipart/form-data";
 
-        if (contentType != null && contentType.contains(method)) {
+            if (contentType != null && contentType.contains(method)) {
             // 将转化后的 request 放入过滤链中
             request = new StandardServletMultipartResolver().resolveMultipart(request);
         }

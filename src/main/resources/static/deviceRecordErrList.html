@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>档案列表</title>
+    <title>人员错误信息列表</title>
     <script src="js/jquery.min.js"></script>
     <script src="js/jquery.easyui.min.js"></script>
     <script src="js/easyui-lang-zh_CN.js"></script>
@@ -30,15 +30,8 @@
                     <td width="150" align="left">
                         <select id="sel" class="easyui-combobox" name="selectParam" style="width:200px;">
                             <option value="xh">人员序号</option>
-                            <option value="bh">工号</option>
-                            <option value="xm">姓名</option>
-                            <option value="kh">卡号</option>
-                            <option value="zp">照片数量</option>
-                            <option value="kssj">有效期开始</option>
-                            <option value="jssj">有效期结束</option>
-                            <option value="mj">门禁规则</option>
-                            <option value="bm">部门名称</option>
-                            <option value="rl">人脸数量</option>
+                            <option value="jerr">错误值</option>
+                            <option value="jtime">错误时间</option>
                         </select>
                     </td>
                     <td width="150" align="left">
@@ -78,7 +71,7 @@
             loader: function (params, success, error) {
                 $.ajax({
                     type: 'post',
-                    url: '../../deviceRecord/getArchives/10.17.1.126',
+                    url: '../../deviceRecord/getFaceErr/10.17.1.126',
                     dataType: 'json',
                     contentType: 'application/json;charset=utf-8', // 设置请求头信息
                     data: JSON.stringify(params),
@@ -104,15 +97,8 @@
             columns: [[
                 //{field:'ck',checkbox:true},
                 {field: 'userSerial', title: "人员序号", width: 200, align: "left"},
-                {field: 'userNo', title: '人员工号', width: 200, align: "left"},
-                {field: 'userName', title: "姓名", width: 200, align: "left"},
-                {field: 'cardNo', title: '卡号', width: 300, align: "left"},
-                {field: 'photoNum', title: '照片数量', width: 300, align: "left"},
-                {field: 'faceNum', title: '人脸数量', width: 300, align: "left"},
-                {field: 'beginTime', title: '有效开始时间', width: 300, align: "left"},
-                {field: 'endTime', title: '有效结束时间 ', width: 300, align: "left"},
-                {field: 'rule', title: '门禁规则', width: 300, align: "left"},
-                {field: 'deptName', title: '部门名称', width: 300, align: "left"}
+                {field: 'errCode', title: "错误值", width: 200, align: "left"},
+                {field: 'recTime', title: '记录时间', width: 200, align: "left"}
             ]],
             toolbar: '#wu_toolbar',
             pagination: true,//向后台传递参数page 和rows

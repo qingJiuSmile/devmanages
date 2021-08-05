@@ -74,11 +74,11 @@ public class DevBaseImpl implements DevBase, DevRestart {
      */
     public static String REQUEST_SUFFIX = "/user/login";
 
+
     /**
      * 存储token容器 格式 ：K（设备IP） - V （token值）
      */
     public static Map<String, Object> tokenMap = new ConcurrentHashMap<>();
-
     /**
      * 存储硬件信息回调数据 格式: K（设备IP） - V （硬件信息）
      */
@@ -173,34 +173,6 @@ public class DevBaseImpl implements DevBase, DevRestart {
      * @return {@link SysInfoEntity}
      * @author tjy
      **/
-    public DiskInfoEntity getDevDiskInfoMap(PublicParam search) {
-        DiskInfoEntity diskInfoEntity = new DiskInfoEntity();
-        List<DiskInfoEntity.DiskInfoData> list = new ArrayList<>();
-        devDiskInfoMap.forEach((k, v) -> list.add(v));
-
-        //////////////////////   筛选、排序等   //////////////////////
-        // 排序
-        if (StringUtils.isNotBlank(search.getOrder()) && StringUtils.isNotBlank(search.getSort())) {
-            if ("desc".equals(search.getOrder())) {
-                list.sort(Comparator.comparing(DiskInfoEntity.DiskInfoData::getDevIp).reversed());
-            } else {
-                list.sort(Comparator.comparing(DiskInfoEntity.DiskInfoData::getDevIp));
-            }
-        }
-        @SuppressWarnings("unchecked")
-        List<DiskInfoEntity.DiskInfoData> listTo = (List<DiskInfoEntity.DiskInfoData>) PageUtil.startPage(list, search.getPage(), search.getRows());
-        diskInfoEntity.setRows(listTo);
-        diskInfoEntity.setTotal(list.size());
-        return diskInfoEntity;
-    }
-
-    /**
-     * 获取应用信息
-     *
-     * @param search 查询条件
-     * @return {@link SysInfoEntity}
-     * @author tjy
-     **/
     public RunInfoEntity getDevRunInfoMap(PublicParam search) {
 
         RunInfoEntity appInfoEntity = new RunInfoEntity();
@@ -221,6 +193,34 @@ public class DevBaseImpl implements DevBase, DevRestart {
         appInfoEntity.setRows(listTo);
         appInfoEntity.setTotal(list.size());
         return appInfoEntity;
+    }
+
+    /**
+     * 获取应用信息
+     *
+     * @param search 查询条件
+     * @return {@link SysInfoEntity}
+     * @author tjy
+     **/
+    public DiskInfoEntity getDevDiskInfoMap(PublicParam search) {
+        DiskInfoEntity diskInfoEntity = new DiskInfoEntity();
+        List<DiskInfoEntity.DiskInfoData> list = new ArrayList<>();
+        devDiskInfoMap.forEach((k, v) -> list.add(v));
+
+        //////////////////////   筛选、排序等   //////////////////////
+        // 排序
+        if (StringUtils.isNotBlank(search.getOrder()) && StringUtils.isNotBlank(search.getSort())) {
+            if ("desc".equals(search.getOrder())) {
+                list.sort(Comparator.comparing(DiskInfoEntity.DiskInfoData::getDevIp).reversed());
+            } else {
+                list.sort(Comparator.comparing(DiskInfoEntity.DiskInfoData::getDevIp));
+            }
+        }
+        @SuppressWarnings("unchecked")
+        List<DiskInfoEntity.DiskInfoData> listTo = (List<DiskInfoEntity.DiskInfoData>) PageUtil.startPage(list, search.getPage(), search.getRows());
+        diskInfoEntity.setRows(listTo);
+        diskInfoEntity.setTotal(list.size());
+        return diskInfoEntity;
     }
 
     /***********************************************************************************************

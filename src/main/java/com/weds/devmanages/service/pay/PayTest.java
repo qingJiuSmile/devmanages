@@ -50,6 +50,7 @@ public class PayTest {
         private String sign;
 
         @ApiModelProperty("商户编码（代表一个学校的一个商户）")
+        @JSONField(name = "cp_code")
         private String cpCode;
     }
 

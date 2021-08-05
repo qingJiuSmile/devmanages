@@ -1,6 +1,7 @@
 package com.weds.devmanages.entity.record;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -17,7 +18,10 @@ import java.util.List;
 public class DevTimeInterval extends DevResultEntity {
 
 
+    @JsonProperty("rows")
     private List<DataTimeInterval> list;
+
+    private Long total;
 
     @Data
     public static class DataTimeInterval {
