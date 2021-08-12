@@ -64,10 +64,10 @@
                     {
                         field: 'opt',
                         title: '操作',
-                        width: 500,
+                        width: 1000,
                         align: "center",
                         formatter: function (value, row, index) {
-                            var context = "<a href='#' onclick='updateOption(" + index + "," + value + ")' style='color: #1075bb'>重启设备</a>&nbsp;&nbsp;&nbsp;&nbsp;"
+                            var context = "<a href='#' onclick='updateOption(" + index + "," + value + ")' style='color: #1075bb'>重启设备</a>&nbsp;&nbsp;&nbsp;&nbsp;" + "&nbsp;&nbsp;&nbsp;&nbsp" + "<a href='#' onclick='uploadFile(" + index + "," + value + ")' style='color: #1075bb'>修复设备（档案）</a>"+ "&nbsp;&nbsp;&nbsp;&nbsp" + "<a href='#' onclick='uploadRule(" + index + "," + value + ")' style='color: #1075bb'>修复设备（规则）</a>";
                             return context;
                         }
                     }
@@ -122,7 +122,7 @@
             });
         }
 
-        function checkOption(index, val) {
+        function uploadFile(index, val) {
             $('#productList').datagrid('endEdit', index);
             var rows = $('#productList').datagrid('getRows');
             var row = rows[index];
@@ -130,11 +130,30 @@
             $.messager.confirm('提示框', '您确认修改此行数据吗？', function (r) {
                 if (r) {
                     $.ajax({
-                        type: "post",
-                        url: '../../v1/conf/updateOption',
-                        data: JSON.stringify(row),
-                        dataType: "json",
-                        contentType: 'application/json;charset=utf-8',
+                        type: "get",
+                        url: '../../base/repairEquipmentToFile?devId='+ row.devId,
+                        success: function (data) {
+                            $.messager.alert('提示框', data.msg, 'info');
+                            refreshDatagrid();
+                        },
+                        error: function (data) {
+                            $.messager.alert('提示框', data.msg, 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        function uploadRule(index, val) {
+            $('#productList').datagrid('endEdit', index);
+            var rows = $('#productList').datagrid('getRows');
+            var row = rows[index];
+            console.log(row)
+            $.messager.confirm('提示框', '您确认修改此行数据吗？', function (r) {
+                if (r) {
+                    $.ajax({
+                        type: "get",
+                        url: '../../base/repairEquipmentToRule?devId='+ row.devId,
                         success: function (data) {
                             $.messager.alert('提示框', data.msg, 'info');
                             refreshDatagrid();

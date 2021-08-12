@@ -1,5 +1,6 @@
 package com.weds.devmanages.service.pay;
 
+import cn.hutool.core.lang.ObjectId;
 import cn.hutool.core.lang.UUID;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -18,6 +19,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -25,7 +27,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -41,7 +45,6 @@ public class PayTest {
     @Autowired
     private RestTemplateUtils restTemplateUtils;
 
-
     @Data
     class SignParam {
         @ApiModelProperty("开发者id")
@@ -49,9 +52,18 @@ public class PayTest {
 
         private String sign;
 
+        private String appId;
+
         @ApiModelProperty("商户编码（代表一个学校的一个商户）")
         @JSONField(name = "cp_code")
         private String cpCode;
+    }
+
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    class Cashier extends SignParam{
+        @JSONField(name = "tran_no")
+        private String tranNo;
     }
 
     @EqualsAndHashCode(callSuper = true)
@@ -79,6 +91,24 @@ public class PayTest {
         @JSONField(name = "tran_type")
         private String tranType;
 
+        @ApiModelProperty("根据account_type确定传的内容")
+        private String account;
+
+        @ApiModelProperty("1:一卡通账号,2:学号,4:身份证号")
+        @JSONField(name = "account_type")
+        private String accountType;
+
+        @ApiModelProperty("异步通知地址长度为200个字节")
+        @JSONField(name = "notify_url")
+        private String notifyUrl;
+
+        @ApiModelProperty("支付成功后页面返回地址\n" +
+                "长度为200个字节\n" +
+                "当支付成功后聚合支付平台会在return_url后面拼接一个\n" +
+                "?cp_tran_no=商户订单号的属性，\n" +
+                "商户可以去后台查询一下订单的状态然后展示相应的支付结果页面")
+        @JSONField(name = "return_url")
+        private String returnUrl;
 
     }
 
@@ -97,21 +127,22 @@ public class PayTest {
     public void testPay() throws Exception {
         String url = "https://open.lsmart.wang/routepay/route";
         String reqUrl = "/pay/unified/preOrder.shtml";
-        url = url + reqUrl;
-        HttpPost httpPost = new HttpPost(url);
-
-        UUID uuid = UUID.randomUUID();
-        System.out.println(uuid.toString());
+        String preUrl = url + reqUrl;
+        HttpPost httpPost = new HttpPost(preUrl);
+        String uuid = ObjectId.next();
+        System.out.println(uuid);
         PreOrder preOrder = new PreOrder();
-        preOrder.setCpTranNo(uuid.toString());
+        preOrder.setCpTranNo(uuid);
         preOrder.setProdName("测试");
         preOrder.setTranMoney(2000);
         preOrder.setTranType("充水费");
         preOrder.setYmAppId("2011031649342027");
         preOrder.setCpCode("yiyun");
+        preOrder.setAppId("2009032008460272310");
+        preOrder.setNotifyUrl("https://api.baidu.com/openapi/pay/notify/wechat");
+        //preOrder.setReturnUrl("https://baidu.com/pay/openapi/");
 
         // 签名不参与加密
-
         String signParam = Md5Util.md5(SignUtil.getSignParams(JSONObject.parseObject(JSONObject.toJSONString(preOrder))));
         System.out.println(signParam);
         String key = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDbicqzabDYMeXzTdHMaRqMAM6e\n" +
@@ -122,15 +153,31 @@ public class PayTest {
         preOrder.setSign(RSAUtil3.encryptByPublicKey(signParam, key));
         httpPost.setEntity(assembleParam(JSONObject.parseObject(JSONObject.toJSONString(preOrder)), ContentType.APPLICATION_FORM_URLENCODED));
         CloseableHttpResponse response = httpsclient.execute(httpPost);
-        System.out.println(toString(response.getEntity()));
+        ZYPayPreOrder zyPayPreOrder = JSONObject.parseObject(toString(response.getEntity()), ZYPayPreOrder.class);
+        System.out.println(zyPayPreOrder);
+
+
+        // ================================================================================================== //
+       /* String cashier = "/pay/unified/toCashier.shtml";
+        HttpGet httpPost1 = new HttpGet(url + cashier);
+        Cashier cashier1 = new Cashier();
+        cashier1.setYmAppId("2011031649342027");
+        cashier1.setCpCode("yiyun");
+        cashier1.setAppId("2009032008460272310");
+        cashier1.setTranNo(zyPayPreOrder.getTranNo());
+        String cashierSignParam = Md5Util.md5(SignUtil.getSignParams(JSONObject.parseObject(JSONObject.toJSONString(cashier1))));
+        cashier1.setSign(RSAUtil3.encryptByPublicKey(cashierSignParam, key));
+        httpPost1.setEntity(assembleParam(JSONObject.parseObject(JSONObject.toJSONString(cashier1)), ContentType.APPLICATION_FORM_URLENCODED));
+        CloseableHttpResponse response1 = httpsclient.execute(httpPost1);
+        System.out.println(toString(response1.getEntity()));*/
+
+
     }
 
     /***
      *
      * toString:httpEntity转换为字符串.
      *
-     * @author luochao
-     * @date 2018年1月27日 下午1:34:33
      * @param httpEntity
      * @return
      */
@@ -156,11 +203,8 @@ public class PayTest {
      *
      * assembleParam:组装参数.
      *
-     * @author luochao
-     * @date 2018年1月27日 下午12:59:54
      * @param map 参数
      * @param contentType 参数类型
-     * @return
      */
     protected static StringEntity assembleParam(Map<String, Object> map, ContentType contentType) {
         StringEntity stringEntity = null;

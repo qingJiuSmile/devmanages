@@ -33,6 +33,24 @@ public class DevBaseController extends BaseClass {
 
     private static final long MB = 1073741824L;
 
+    @ApiOperation("修复设备（全量下发档案）")
+    @GetMapping("/repairEquipmentToFile")
+    public JsonResult<Integer> repairEquipmentToFile(@RequestParam("devId") String devId) {
+        if (StringUtils.isBlank(devId)) {
+            return failMsg("设备id为空");
+        }
+        return succMsgData(n8Implement.repairEquipmentAll(devId));
+    }
+
+    @ApiOperation("修复设备（全量下发规则）")
+    @GetMapping("/repairEquipmentToRule")
+    public JsonResult<Integer> repairEquipmentToRule(@RequestParam("devId") String devId) {
+        if (StringUtils.isBlank(devId)) {
+            return failMsg("设备id为空");
+        }
+        return succMsgData(n8Implement.repairEquipment2RuleAll(devId));
+    }
+
     @ApiOperation("获取所有设备硬件系统信息")
     @PostMapping("/getInfoAll")
     public JsonResult<SysInfoEntity> getInfoAll(@RequestBody PublicParam search) throws InterruptedException {

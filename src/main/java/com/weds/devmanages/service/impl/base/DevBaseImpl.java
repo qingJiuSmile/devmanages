@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.weds.devmanages.config.thread.DevThreadPoolConfig;
 import com.weds.devmanages.entity.*;
 import com.weds.devmanages.entity.record.RecordEntity;
+import com.weds.devmanages.mapper.datasource1.DeviceBaseManage2PGMapper;
+import com.weds.devmanages.mapper.datasource2.DeviceBaseMange2MSMapper;
 import com.weds.devmanages.service.DevBase;
 import com.weds.devmanages.service.DevRestart;
 import com.weds.devmanages.service.impl.record.DevRecordImpl;
@@ -59,8 +61,9 @@ public class DevBaseImpl implements DevBase, DevRestart {
     @Autowired
     private DevThreadPoolConfig n8ThreadPool;
 
-
     public static String N8_USER_ACCOUNT = "N8:USER:ACCOUNT";
+
+    private static final int OPERATION_ID = 1073741824;
 
     private static long DELAYED_TIME = 0;
 
@@ -100,6 +103,104 @@ public class DevBaseImpl implements DevBase, DevRestart {
      * 存设备磁盘信息 格式: K（设备IP） - V （磁盘信息）
      */
     private Map<String, DiskInfoEntity.DiskInfoData> devDiskInfoMap = new ConcurrentHashMap<>();
+
+    @Autowired
+    private DeviceBaseManage2PGMapper deviceBaseManage2PGMapper;
+
+    @Autowired
+    private DeviceBaseMange2MSMapper deviceBaseMange2MSMapper;
+
+
+    /**
+     * 修复设备(全量下发档案) 包含PG、MS库
+     *
+     * @param devId 设备id
+     * @return {@link Integer}
+     **/
+    public Integer repairEquipmentAll(String devId) {
+        Integer ret1 = repairEquipmentForPg(devId);
+        Integer ret2 = repairEquipmentForMs(devId);
+        ret1 = ret1 == null || ret1.equals(0) ? 0 : ret1;
+        ret2 = ret2 == null || ret2.equals(0) ? 0 : ret2;
+        return ret1 + ret2;
+    }
+
+    /**
+     * 修复设备(全量下发档案) 包含PG、MS库
+     *
+     * @param devId 设备id
+     * @return {@link Integer}
+     **/
+    public Integer repairEquipment2RuleAll(String devId) {
+        Integer ret1 = repairEquipment2RuleForPg(devId);
+        Integer ret2 = repairEquipment2RuleForMs(devId);
+        ret1 = ret1 == null || ret1.equals(0) ? 0 : ret1;
+        ret2 = ret2 == null || ret2.equals(0) ? 0 : ret2;
+        return ret1 + ret2;
+    }
+
+    /**
+     * 修复设备PG(全量规则)
+     *
+     * @param devId 设备id
+     * @return {@link Integer} 成功条数
+     **/
+    private Integer repairEquipment2RuleForPg(String devId) {
+        try {
+            return deviceBaseManage2PGMapper.insertFullOperationFileRule2PG(devId, OPERATION_ID);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return null;
+        }
+
+    }
+
+    /**
+     * 修复设备MS(全量规则)
+     *
+     * @param devId 设备id
+     * @return {@link Integer} 成功条数
+     **/
+    private Integer repairEquipment2RuleForMs(String devId) {
+        try {
+            return deviceBaseMange2MSMapper.insertFullOperationFileRule2MS(devId, OPERATION_ID);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return null;
+        }
+
+    }
+
+    /**
+     * 修复设备PG(全量下发档案)
+     *
+     * @param devId 设备id
+     * @return {@link Integer} 成功条数
+     **/
+    private Integer repairEquipmentForPg(String devId) {
+        try {
+            return deviceBaseManage2PGMapper.insertFullOperationFile2PG(devId, OPERATION_ID);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return null;
+        }
+
+    }
+
+    /**
+     * 修复设备MS(全量下发档案)
+     *
+     * @param devId 设备id
+     * @return {@link Integer} 成功条数
+     **/
+    private Integer repairEquipmentForMs(String devId) {
+        try {
+            return deviceBaseMange2MSMapper.insertFullOperationFile2MS(devId, OPERATION_ID);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return null;
+        }
+    }
 
     /**
      * 获取设备硬件信息
@@ -845,7 +946,7 @@ public class DevBaseImpl implements DevBase, DevRestart {
                     }
                     log.info("" + tokenMap);
                 } catch (Exception e) {
-                    log.error("设备 ==> [{}] {}{}", o, e.getMessage(), e);
+                   // log.error("设备 ==> [{}] {}{}", o, e.getMessage(), e);
                 }
             });
         }

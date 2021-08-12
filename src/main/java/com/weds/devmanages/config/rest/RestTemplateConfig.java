@@ -14,7 +14,7 @@ import java.util.List;
 @Configuration
 public class RestTemplateConfig {
 
-    private static int TIMEOUT = 2000;
+    private static int TIMEOUT = 5000;
 
     @Bean
     public RestTemplate restTemplate(ClientHttpRequestFactory factory) {
