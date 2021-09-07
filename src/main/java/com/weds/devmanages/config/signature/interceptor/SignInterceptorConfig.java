@@ -4,6 +4,7 @@ package com.weds.devmanages.config.signature.interceptor;
 import com.alibaba.fastjson.JSONObject;
 import com.weds.devmanages.config.log.JsonResult;
 import com.weds.devmanages.config.signature.SignUtil;
+import com.weds.devmanages.entity.signature.SignatureParamEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -26,7 +27,7 @@ import java.io.PrintWriter;
  * @author tjy
  */
 @Configuration
-@ConditionalOnExpression("${weds.check: true }")
+@ConditionalOnExpression("${weds.sign.check: true }")
 @Slf4j
 public class SignInterceptorConfig implements WebMvcConfigurer {
 
@@ -34,12 +35,15 @@ public class SignInterceptorConfig implements WebMvcConfigurer {
     @Autowired
     private SignUtil signUtil;
 
+    @Autowired
+    private SignatureParamEntity signatureParamEntity;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // 注册TestInterceptor拦截器
         InterceptorRegistration registration = registry.addInterceptor(new SignInterceptor());
         // 选择路径都被拦截
-        registration.addPathPatterns("/base/**", "/config/**", "/mode/**", "/deviceRecord/**");
+        registration.addPathPatterns(signatureParamEntity.getPathPatterns());
     }
 
     class SignInterceptor implements HandlerInterceptor {

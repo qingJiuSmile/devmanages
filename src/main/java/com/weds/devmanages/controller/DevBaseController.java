@@ -2,6 +2,7 @@ package com.weds.devmanages.controller;
 
 import cn.hutool.core.io.FileTypeUtil;
 import com.weds.devmanages.base.BaseClass;
+import com.weds.devmanages.config.lock.annotation.DistributedLock;
 import com.weds.devmanages.config.log.JsonResult;
 import com.weds.devmanages.entity.*;
 import com.weds.devmanages.entity.record.RecordEntity;
@@ -20,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 
@@ -202,7 +205,6 @@ public class DevBaseController extends BaseClass {
     @Signature
     public JsonResult<Boolean> importStartUpImg(@PathVariable String ip, MultipartFile file) {
 
-        // TODO 限制同一时间只能有一人进行图片设置
         if (StringUtils.isBlank(ip)) {
             return failMsg("设备ip为空");
         }
@@ -288,6 +290,26 @@ public class DevBaseController extends BaseClass {
             return failMsg("IP格式有误");
         }
         return succMsgData(n8Implement.timeCalibration(ip));
+    }
+
+
+    @ApiOperation("设备时间校准 (设备自带校时，此功能无效)")
+    @PostMapping("/setTime1/")
+    @DistributedLock()
+    public JsonResult<Boolean> setTime121(String ip) {
+        ExecutorService executorService = Executors.newFixedThreadPool(20);
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(Thread.currentThread().getName() + "进入" + ip);
+            }
+        });
+        try {
+            TimeUnit.SECONDS.sleep(10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return succMsgData(true);
     }
 
 

@@ -5,7 +5,6 @@ spring:
   redis:
     host: localhost
     port: 6379
-    password:
     jedis:
       pool:
         # 连接池中的最大空闲时间
@@ -81,5 +80,15 @@ weds:
   thread:
     core-pool-size: 20
     maximum-pool-size: 20
-  check: false # 是否开启接口签名校验
+  sign:
+    # 是否开启接口签名校验
+    check: false
+    # 拦截器过滤路径
+    path-patterns:
+      - "/base/**"
+      - "/config/**"
+      - "/mode/**"
+      - "/deviceRecord/**"
+
+
 

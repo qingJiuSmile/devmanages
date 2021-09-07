@@ -26,6 +26,7 @@ public class HMACSHA256 {
         return hs.toString().toLowerCase();
     }
 
+
     /**
      * sha256_HMAC加密
      *
@@ -36,16 +37,15 @@ public class HMACSHA256 {
     public static String sha256_HMAC(String message, String secret) {
         String hash = "";
         try {
-            Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
+            Mac sha256HMAC = Mac.getInstance("HmacSHA256");
             SecretKeySpec secret_key = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
-            sha256_HMAC.init(secret_key);
-            byte[] bytes = sha256_HMAC.doFinal(message.getBytes());
+            sha256HMAC.init(secret_key);
+            byte[] bytes = sha256HMAC.doFinal(message.getBytes());
             hash = byteArrayToHexString(bytes);
         } catch (Exception e) {
             log.error("Error HmacSHA256 ===========" + e.getMessage());
         }
         return hash;
     }
-
 
 }

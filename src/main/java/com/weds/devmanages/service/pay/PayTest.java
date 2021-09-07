@@ -31,8 +31,10 @@ import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,9 +63,75 @@ public class PayTest {
 
     @Data
     @EqualsAndHashCode(callSuper = true)
-    class Cashier extends SignParam{
+    class PayOrderQuery extends SignParam {
+
+        @ApiModelProperty("商户订单提交时间,精确到秒格式：yyyyMMddHHmmss")
+        private String time;
+
+        @ApiModelProperty("商户订单号（与tran_no/pay_info三选一）")
+        @JSONField(name = "cp_tran_no")
+        private String cpTranNo;
+
+        @JSONField(name = "tran_no")
+        @ApiModelProperty("统一支付订单号（与cp_tran_no/pay_info三选一）")
+        private String tranNo;
+
+        @JSONField(name = "pay_info")
+        @ApiModelProperty("二维码信息（与cp_tran_no/tran_no三选一）")
+        private String payInfo;
+    }
+
+    @EqualsAndHashCode(callSuper = true)
+    @Data
+    class RefundQuery extends SignParam {
+
+        @ApiModelProperty("商户订单提交时间,精确到秒格式：yyyyMMddHHmmss")
+        private String time;
+
+        @ApiModelProperty("商户退款订单号")
+        @JSONField(name = "cp_refund_tran_no")
+        private String cpRefundTranNo;
+
+    }
+
+    @EqualsAndHashCode(callSuper = true)
+    @Data
+    class PayRefund extends SignParam {
+
+        @ApiModelProperty("支付订单号，当tran_no和cp_tran_no都传时，以tran_no为准")
         @JSONField(name = "tran_no")
         private String tranNo;
+
+
+        @ApiModelProperty("商户订单号，确保平台唯一性字母、数字或字线数字组合长度最大为32字节")
+        @JSONField(name = "cp_tran_no")
+        private String cpTranNo;
+
+
+        @ApiModelProperty("商户退款订单号")
+        @JSONField(name = "cp_refund_tran_no")
+        private String cpRefundTranNo;
+
+
+        @ApiModelProperty("支付订单号，当tran_no和cp_tran_no都传时，以tran_no为准")
+        @JSONField(name = "refund_money")
+        private Integer refundMoney;
+
+
+        @ApiModelProperty("支付订单号，当tran_no和cp_tran_no都传时，以tran_no为准")
+        @JSONField(name = "refund_reason")
+        private String refundReason;
+
+
+        @ApiModelProperty("异步通知地址，长度为200个字节")
+        @JSONField(name = "notify_url")
+        private String notifyUrl;
+
+
+        @ApiModelProperty("支商户订单提交时间,精确到秒格式：yyyyMMddHHmmss")
+        private String time;
+
+
     }
 
     @EqualsAndHashCode(callSuper = true)
@@ -124,8 +192,13 @@ public class PayTest {
      */
     private static CloseableHttpClient httpsclient = HttpClientBuilder.create().build();
 
+    private static String url = "https://open.lsmart.wang/routepay/route";
+    private static String key = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDbicqzabDYMeXzTdHMaRqMAM6e\n" +
+            "        2hqfzJrF1AkNyNW7G0sAlkypppqqYf68FINedcN3W4GNbjxXi83rzeqO6HOwpp5a\n" +
+            "        JfoxXGR2FWvyLt2au+j6/HS85VJEkGxvAP003rUMuJZgD+4iZTUUqQDq939ZzIMJ\n" +
+            "        GSr2/3OBgiQERt9rkQIDAQAB";
+
     public void testPay() throws Exception {
-        String url = "https://open.lsmart.wang/routepay/route";
         String reqUrl = "/pay/unified/preOrder.shtml";
         String preUrl = url + reqUrl;
         HttpPost httpPost = new HttpPost(preUrl);
@@ -133,22 +206,19 @@ public class PayTest {
         System.out.println(uuid);
         PreOrder preOrder = new PreOrder();
         preOrder.setCpTranNo(uuid);
-        preOrder.setProdName("测试");
-        preOrder.setTranMoney(2000);
-        preOrder.setTranType("充水费");
+        preOrder.setProdName("预约场馆测试");
+        preOrder.setTranMoney(1);
+        preOrder.setTranType("预约支付");
         preOrder.setYmAppId("2011031649342027");
         preOrder.setCpCode("yiyun");
         preOrder.setAppId("2009032008460272310");
-        preOrder.setNotifyUrl("https://api.baidu.com/openapi/pay/notify/wechat");
+        // 这里回调地址，设置可配置的 TODO
+        preOrder.setNotifyUrl("http://42b25n7831.zicp.vip/fragment/testRoolback");
         //preOrder.setReturnUrl("https://baidu.com/pay/openapi/");
 
         // 签名不参与加密
         String signParam = Md5Util.md5(SignUtil.getSignParams(JSONObject.parseObject(JSONObject.toJSONString(preOrder))));
         System.out.println(signParam);
-        String key = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDbicqzabDYMeXzTdHMaRqMAM6e\n" +
-                "        2hqfzJrF1AkNyNW7G0sAlkypppqqYf68FINedcN3W4GNbjxXi83rzeqO6HOwpp5a\n" +
-                "        JfoxXGR2FWvyLt2au+j6/HS85VJEkGxvAP003rUMuJZgD+4iZTUUqQDq939ZzIMJ\n" +
-                "        GSr2/3OBgiQERt9rkQIDAQAB";
 
         preOrder.setSign(RSAUtil3.encryptByPublicKey(signParam, key));
         httpPost.setEntity(assembleParam(JSONObject.parseObject(JSONObject.toJSONString(preOrder)), ContentType.APPLICATION_FORM_URLENCODED));
@@ -156,22 +226,104 @@ public class PayTest {
         ZYPayPreOrder zyPayPreOrder = JSONObject.parseObject(toString(response.getEntity()), ZYPayPreOrder.class);
         System.out.println(zyPayPreOrder);
 
+    }
 
+    public void testPayQuery(String time, String tranNo) throws Exception {
         // ================================================================================================== //
-       /* String cashier = "/pay/unified/toCashier.shtml";
-        HttpGet httpPost1 = new HttpGet(url + cashier);
-        Cashier cashier1 = new Cashier();
-        cashier1.setYmAppId("2011031649342027");
-        cashier1.setCpCode("yiyun");
-        cashier1.setAppId("2009032008460272310");
-        cashier1.setTranNo(zyPayPreOrder.getTranNo());
-        String cashierSignParam = Md5Util.md5(SignUtil.getSignParams(JSONObject.parseObject(JSONObject.toJSONString(cashier1))));
-        cashier1.setSign(RSAUtil3.encryptByPublicKey(cashierSignParam, key));
-        httpPost1.setEntity(assembleParam(JSONObject.parseObject(JSONObject.toJSONString(cashier1)), ContentType.APPLICATION_FORM_URLENCODED));
-        CloseableHttpResponse response1 = httpsclient.execute(httpPost1);
-        System.out.println(toString(response1.getEntity()));*/
+        String query = "/query/payOrder.shtml";
+        // HttpGet httpPost1 = new HttpGet(url + query);
+        PayOrderQuery payOrderQuery = new PayOrderQuery();
+        payOrderQuery.setYmAppId("2011031649342027");
+        payOrderQuery.setCpCode("yiyun");
+        payOrderQuery.setAppId("2009032008460272310");
+        payOrderQuery.setTranNo(tranNo);
+        payOrderQuery.setTime(time);
+        // 签名不参与加密
+        String signParam = Md5Util.md5(SignUtil.getSignParams(JSONObject.parseObject(JSONObject.toJSONString(payOrderQuery))));
+        System.out.println(signParam);
+        payOrderQuery.setSign(RSAUtil3.encryptByPublicKey(signParam, key));
+        // payOrderQuery.setYmAppId(URLEncoder.encode("2011031649342027", "UTF-8"));
+        StringEntity stringEntity = assembleParam(JSONObject.parseObject(JSONObject.toJSONString(payOrderQuery)), ContentType.APPLICATION_FORM_URLENCODED);
+        JSONObject body = restTemplateUtils.get(url + query + "?" + toString(stringEntity), addHeader(), JSONObject.class).getBody();
+        System.out.println(body);
+    }
 
 
+    // cp_refund_tran_no	商户退款订单号	string	是
+    // refund_money	退款金额，单位分，不能大于支付订单金额	int	是
+    // refund_reason	退款原因	string	是
+    // notify_url	异步通知地址，长度为200个字节	string	是
+    // time	商户订单提交时间,精确到秒
+    // 格式：yyyyMMddHHmmss	string	是
+
+    public void testRollbackMoney(String cpRefundTranNo, Integer refundMoney, String time, String tranNo, String cpTranNo) throws Exception {
+        String query = "/pay/unified/refund.shtml";
+        HttpPost httpPost = new HttpPost(url + query);
+        PayRefund payRefund = new PayRefund();
+        payRefund.setYmAppId("2011031649342027");
+        payRefund.setCpCode("yiyun");
+        payRefund.setAppId("2009032008460272310");
+        payRefund.setCpRefundTranNo(cpRefundTranNo);
+        payRefund.setRefundMoney(refundMoney);
+        payRefund.setRefundReason("没时间了");
+        payRefund.setTranNo(tranNo);
+        payRefund.setCpTranNo(cpTranNo);
+        // 回调地址
+        payRefund.setNotifyUrl("http://42b25n7831.zicp.vip/fragment/testRefundPay");
+        payRefund.setTime(time);
+
+        // 签名不参与加密
+        String signParam = Md5Util.md5(SignUtil.getSignParams(JSONObject.parseObject(JSONObject.toJSONString(payRefund))));
+        System.out.println(signParam);
+
+        payRefund.setSign(RSAUtil3.encryptByPublicKey(signParam, key));
+        httpPost.setEntity(assembleParam(JSONObject.parseObject(JSONObject.toJSONString(payRefund)), ContentType.APPLICATION_FORM_URLENCODED));
+        CloseableHttpResponse response = httpsclient.execute(httpPost);
+        JSONObject jsonObject = JSONObject.parseObject(toString(response.getEntity()), JSONObject.class);
+        System.out.println(jsonObject);
+
+    }
+
+
+    // time	商户订单提交时间,精确到秒
+    //格式：yyyyMMddHHmmss	string	是
+    //cp_refund_tran_no	商户退款订单号	string	是
+    public void testRollbackMoneyQuery(String time, String cpRefundTranNo) throws Exception {
+        String query = "/query/refundOrder.shtml";
+        RefundQuery refundQuery = new RefundQuery();
+        refundQuery.setYmAppId("2011031649342027");
+        refundQuery.setCpCode("yiyun");
+        refundQuery.setAppId("2009032008460272310");
+        refundQuery.setTime(time);
+        refundQuery.setCpRefundTranNo(cpRefundTranNo);
+        // 签名不参与加密
+        String signParam = Md5Util.md5(SignUtil.getSignParams(JSONObject.parseObject(JSONObject.toJSONString(refundQuery))));
+        System.out.println(signParam);
+        refundQuery.setSign(RSAUtil3.encryptByPublicKey(signParam, key));
+        StringEntity stringEntity = assembleParam(JSONObject.parseObject(JSONObject.toJSONString(refundQuery)), ContentType.APPLICATION_FORM_URLENCODED);
+        JSONObject body = restTemplateUtils.get(url + query + "?" + toString(stringEntity), addHeader(), JSONObject.class).getBody();
+        System.out.println(body);
+    }
+
+
+    public void testClear(String tranNo) throws Exception {
+        String query = "/pay/reverse.shtml";
+        HttpPost httpPost = new HttpPost(url + query);
+        PayRefund payRefund = new PayRefund();
+        payRefund.setYmAppId("2011031649342027");
+        payRefund.setCpCode("yiyun");
+        payRefund.setAppId("2009032008460272310");
+        payRefund.setTranNo(tranNo);
+
+        // 签名不参与加密
+        String signParam = Md5Util.md5(SignUtil.getSignParams(JSONObject.parseObject(JSONObject.toJSONString(payRefund))));
+        System.out.println(signParam);
+
+        payRefund.setSign(RSAUtil3.encryptByPublicKey(signParam, key));
+        httpPost.setEntity(assembleParam(JSONObject.parseObject(JSONObject.toJSONString(payRefund)), ContentType.APPLICATION_FORM_URLENCODED));
+        CloseableHttpResponse response = httpsclient.execute(httpPost);
+        JSONObject jsonObject = JSONObject.parseObject(toString(response.getEntity()), JSONObject.class);
+        System.out.println(jsonObject);
     }
 
     /***

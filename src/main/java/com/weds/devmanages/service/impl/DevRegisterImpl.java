@@ -66,8 +66,12 @@ public class DevRegisterImpl extends BaseClass implements DevRegister {
                     loginEntity.setIp(devIpLs);
                     loginEntity.setPassword(pwd);
                     redisUtil.set(DevBaseImpl.N8_USER_ACCOUNT + ":" + devIpLs, JSONObject.toJSONString(loginEntity));
-                    redisUtil.set(DEV_APP + devIpLs + ":appId", map.get("appId").toString());
-                    redisUtil.set(DEV_APP + devIpLs + ":appSecret", map.get("appSecret").toString());
+                    // k : v = appId : appSecret
+                    Map<String, Object> push = new HashMap<>(5);
+                    push.put("appId", map.get("appId").toString());
+                    push.put("appSecret", map.get("appSecret").toString());
+                    push.put("devIp", map.get("devIp").toString());
+                    redisUtil.set(DEV_APP + "appId:" + map.get("appId").toString() , JSONObject.toJSONString(push));
                 }
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
@@ -108,8 +112,8 @@ public class DevRegisterImpl extends BaseClass implements DevRegister {
      **/
     public Map<String, Object> distribution(String devIp) {
         Map<String, Object> map = new HashMap<>(3);
-        map.put("appSecret", Base64Encoder.encode(System.currentTimeMillis() + SECRET + devIp));
         map.put("appId", MD5.create().digestHex(System.currentTimeMillis() + SECRET + devIp));
+        map.put("appSecret", Base64Encoder.encode(System.currentTimeMillis() + SECRET + devIp));
         map.put("devIp", devIp);
         return map;
     }

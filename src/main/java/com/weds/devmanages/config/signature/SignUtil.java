@@ -36,48 +36,6 @@ public class SignUtil {
     @Autowired
     private RedisUtil redisUtil;
 
-    public static String sign(String body, Map<String, String[]> params, String[] paths, String appId, String appSecret, String timestamp) {
-
-        if (StringUtils.isBlank(appSecret)) {
-            return "";
-        }
-
-        StringBuilder sb = new StringBuilder();
-        if (StringUtils.isNotBlank(body)) {
-            // json字符串转map
-            JSONObject jsonObject = JSONObject.parseObject(body);
-            SortedMap<String, Object> treeMap = new TreeMap<>();
-            jsonObject.forEach(treeMap::put);
-            sb.append(createSign(treeMap, appSecret));
-        }
-
-        if (!CollectionUtils.isEmpty(params)) {
-            if(StringUtils.isNotBlank(sb.toString())){
-                sb.append("_");
-            }
-            params.entrySet()
-                    .stream()
-                    .sorted(Map.Entry.comparingByKey())
-                    .forEach(paramEntry -> {
-                        String paramValue = String.join(",", Arrays.stream(paramEntry.getValue()).sorted().toArray(String[]::new));
-                        sb.append(paramEntry.getKey()).append("=").append(paramValue);
-                    });
-        }
-
-        if (ArrayUtils.isNotEmpty(paths)) {
-            if(StringUtils.isNotBlank(sb.toString())){
-                sb.append("_");
-            }
-            String pathValues = String.join(",", Arrays.stream(paths).sorted().toArray(String[]::new));
-            sb.append(pathValues);
-        }
-        sb.append("appId=").append(appId).append("appSecret=").append(appSecret).append("timestamp=").append(timestamp);
-        log.info("加密前  ==> [{}]", sb.toString());
-        String resultSign = HMACSHA256.sha256_HMAC(appSecret, sb.toString());
-        log.info("实际签名 ==> [{}]", resultSign);
-        return resultSign;
-    }
-
     public static String createSign(SortedMap<String, Object> parameters, String key) {
         StringBuilder sbKey = new StringBuilder();
         Set es = parameters.entrySet();
@@ -97,6 +55,48 @@ public class SignUtil {
         return MD5.create().digestHex(sbKey.toString()).toUpperCase();
     }
 
+    public static String sign(String body, Map<String, String[]> params, String[] paths, String appId, String appSecret, String timestamp) {
+
+        if (StringUtils.isBlank(appSecret)) {
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        if (StringUtils.isNotBlank(body)) {
+            // json字符串转map
+            JSONObject jsonObject = JSONObject.parseObject(body);
+            SortedMap<String, Object> treeMap = new TreeMap<>();
+            jsonObject.forEach(treeMap::put);
+            sb.append(createSign(treeMap, appSecret));
+        }
+
+        if (!CollectionUtils.isEmpty(params)) {
+            if (StringUtils.isNotBlank(sb.toString())) {
+                sb.append("_");
+            }
+            params.entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .forEach(paramEntry -> {
+                        String paramValue = String.join(",", Arrays.stream(paramEntry.getValue()).sorted().toArray(String[]::new));
+                        sb.append(paramEntry.getKey()).append("=").append(paramValue);
+                    });
+        }
+
+        if (ArrayUtils.isNotEmpty(paths)) {
+            if (StringUtils.isNotBlank(sb.toString())) {
+                sb.append("_");
+            }
+            String pathValues = String.join(",", Arrays.stream(paths).sorted().toArray(String[]::new));
+            sb.append(pathValues);
+        }
+        sb.append("appId=").append(appId).append("appSecret=").append(appSecret).append("timestamp=").append(timestamp);
+        log.info("加密前  ==> [{}]", sb.toString());
+        String resultSign = HMACSHA256.sha256_HMAC(appSecret, sb.toString());
+        log.info("实际签名 ==> [{}]", resultSign);
+        return resultSign;
+    }
+
 
     public void test() {
     }
@@ -111,10 +111,9 @@ public class SignUtil {
         // 从header头获取配置
         String oldSign = request.getHeader("WEDS-SIGN");
         String appId = request.getHeader("appId");
-        String appSecret = request.getHeader("appSecret");
         String timestamp = request.getHeader("timestamp");
 
-        if (StringUtils.isBlank(oldSign) || StringUtils.isBlank(appId) || StringUtils.isBlank(appSecret) || StringUtils.isBlank(timestamp)) {
+        if (StringUtils.isBlank(oldSign) || StringUtils.isBlank(appId) || StringUtils.isBlank(timestamp)) {
             throw new Exception("header required verification parameters are missing");
         }
 
@@ -122,25 +121,20 @@ public class SignUtil {
             throw new Exception("timestamp not a number");
         }
 
-        // 检查appId与appSecret是否属于当前注册设备的范畴内； TODO 后期可能更换验证方式
-        boolean isSecret = false;
-        boolean isAppId = false;
-        Set<String> appIdKeys = redisUtil.getScanKeys(DevRegisterImpl.DEV_APP + "*:appId", -1);
-        Set<String> appSecretKeys = redisUtil.getScanKeys(DevRegisterImpl.DEV_APP + "*:appSecret", -1);
-        for (String scanKey : appIdKeys) {
-            if (redisUtil.get(scanKey).toString().equals(appId)) {
-                isAppId = true;
-                break;
-            }
+        // 检查appId是否存在
+        Object o = redisUtil.get(DevRegisterImpl.DEV_APP + "appId" + appId);
+        if (o == null) {
+            throw new Exception("appId does not exist");
         }
-        for (String scanKey : appSecretKeys) {
-            if (redisUtil.get(scanKey).toString().equals(appSecret)) {
-                isSecret = true;
-                break;
-            }
-        }
-        if (!isAppId || !isSecret) {
-            throw new Exception("appId or appSecret does not exist");
+
+        JSONObject jsonObject = JSONObject.parseObject(o.toString());
+        // 设备ip先预留，后续可能用到
+        String devIp = jsonObject.getString("devIp");
+        // 密钥
+        String appSecret = jsonObject.getString("appSecret");
+
+        if (StringUtils.isBlank(appSecret)) {
+            throw new Exception("No appSecret found by appId");
         }
 
         // 检查header头上的timestamp时间与当前时间对比是否超出1分钟
