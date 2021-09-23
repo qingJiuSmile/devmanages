@@ -80,6 +80,12 @@ weds:
   thread:
     core-pool-size: 20
     maximum-pool-size: 20
+    # 定时任务规划
+  timed:
+    # 设备状态定时任务规划
+    task-state: '0/5 * * * * ?'
+    # 设备信息定时任务规划
+    task-info: '0 0/10 * * * ?'
   sign:
     # 是否开启接口签名校验
     check: false
@@ -89,6 +95,7 @@ weds:
       - "/config/**"
       - "/mode/**"
       - "/deviceRecord/**"
+
 
 
 

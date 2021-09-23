@@ -15,17 +15,16 @@ public class DevTimedTask {
     @Autowired
     private DevBaseImpl devBase;
 
-
-    @Scheduled(cron = "0/10 * * * * ?")
+    @Scheduled(cron = "${weds.timed.task-state}")
     @Async("devTaskExecutor")
     public void taskState() {
         log.debug("=================== init dev state =================== ");
-        // 每10s同步一下设备状态（在线，离线）
+        // 根据定时任务同步设备状态（在线，离线）
         devBase.initDeviceState();
         devBase.tokenRegularInspection();
     }
 
-    @Scheduled(cron = "0 0/10 * * * ?")
+    @Scheduled(cron = "${weds.timed.task-info}")
     @Async("devTaskExecutor")
     public void taskInfo() {
         log.debug("=================== init send dev =================== ");
