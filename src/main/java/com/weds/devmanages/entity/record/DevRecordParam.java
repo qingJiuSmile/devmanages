@@ -5,6 +5,7 @@ import com.weds.devmanages.entity.SignatureEntity;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+
 /**
  * 档案管理参数
  *
@@ -32,6 +33,15 @@ public class DevRecordParam extends SignatureEntity {
     private Integer rowCount;
 
     private String tableName;
+
+    private String timeEnd;
+
+    private String timeStart;
+
+    private String timeField;
+
+    private Integer type;
+
 
 
 }

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>人员错误信息列表</title>
+    <title>上传人员人脸错误信息列表</title>
     <script src="js/jquery.min.js"></script>
     <script src="js/jquery.easyui.min.js"></script>
     <script src="js/easyui-lang-zh_CN.js"></script>
@@ -71,7 +71,7 @@
             loader: function (params, success, error) {
                 $.ajax({
                     type: 'post',
-                    url: '../../deviceRecord/getFaceErr/10.17.1.126',
+                    url: '../../deviceRecord/getFaceErr/10.17.1.12',
                     dataType: 'json',
                     contentType: 'application/json;charset=utf-8', // 设置请求头信息
                     data: JSON.stringify(params),

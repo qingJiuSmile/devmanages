@@ -56,6 +56,8 @@ public class SignatureAspect {
             if ("500 Internal Server Error: [no permission]".equals(throwable.getMessage()) && paths != null) {
                 LOGGER.info("token过期刷新token [{}]", devRestart.refreshToken(paths[0]));
                 return new JsonResult(601, "token已过期，已为您刷新token，请再试一次");
+            } else {
+                return new JsonResult(500, throwable.getMessage());
             }
         }
         return proceed;

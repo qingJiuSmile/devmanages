@@ -43,4 +43,51 @@ public interface DevRecord {
      * @return {@link DevFaceErr}
      **/
     DevFaceErr getFaceErr(DevRecordParam param);
+
+
+    /**
+     * 获取人脸识别记录
+     *
+     * @param param 请求参数
+     * @return {@link DevIdentifyEntity}
+     **/
+    DevIdentifyEntity getFaceIdentify(DevRecordParam param);
+
+
+    /**
+     * 获取外来人员记录
+     *
+     * @param param 请求参数
+     * @return {@link DevOutsidersEntiy}
+     **/
+    DevOutsidersEntiy getOutsiders(DevRecordParam param);
+
+    /**
+     * 清空剩余任务
+     *
+     * @param param {
+     *              devId,
+     *              type 默认填0
+     *              }
+     * @return boolean
+     **/
+    boolean taskClearAll(DevRecordParam param);
+
+
+    /**
+     * 清空未上传记录
+     *
+     * @param param {
+     *              devId,
+     *              type
+     *              清空未上传记录 默认填2
+     *              清空人脸 默认填3
+     *              清空档案 默认填2
+     *              }
+     * @return {@link boolean}
+     * @date 2021/9/10
+     **/
+    boolean clearAll(DevRecordParam param);
+
+
 }

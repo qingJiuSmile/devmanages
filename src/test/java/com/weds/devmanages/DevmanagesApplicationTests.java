@@ -1,25 +1,29 @@
 package com.weds.devmanages;
 
 import cn.hutool.core.date.LocalDateTimeUtil;
-import cn.hutool.core.lang.ObjectId;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.annotation.JSONField;
+import com.weds.devmanages.entity.LoginReturn;
 import com.weds.devmanages.entity.N8RequestEntity;
-import com.weds.devmanages.entity.SignatureEntity;
 import com.weds.devmanages.entity.signature.SignatureParamEntity;
 import com.weds.devmanages.service.DevBase;
 import com.weds.devmanages.service.impl.base.DevBaseImpl;
-import com.weds.devmanages.service.pay.PayTest;
 import com.weds.devmanages.util.RedisUtil;
 import com.weds.devmanages.util.RestTemplateUtils;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -44,56 +48,6 @@ class DevmanagesApplicationTests {
 
     @Autowired
     private RestTemplateUtils restTemplateUtils;
-
-
-    @Autowired
-    private PayTest payTest;
-
-    // 支付订单
-    @Test
-    void contes() throws Exception {
-        /**
-         * ymAppId:2011031649342027
-         * appid:2009032008460272310
-         * cp_code:yiyun
-         * 签名公钥:MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDbicqzabDYMeXzTdHMaRqMAM6e
-         * 2hqfzJrF1AkNyNW7G0sAlkypppqqYf68FINedcN3W4GNbjxXi83rzeqO6HOwpp5a
-         * JfoxXGR2FWvyLt2au+j6/HS85VJEkGxvAP003rUMuJZgD+4iZTUUqQDq939ZzIMJ
-         * GSr2/3OBgiQERt9rkQIDAQAB
-         */
-        payTest.testPay();
-
-    }
-
-    // 支付查询
-    @Test
-    void contesTo() throws Exception {
-        payTest.testPayQuery("", "2108161045342334000");
-
-    }
-
-    // 取消支付
-    @Test
-    void contesTo2() throws Exception {
-        payTest.testClear("2108160942432303000");
-
-    }
-
-
-    //  退款操作
-    @Test
-    void contesTh() throws Exception {
-        String uuid = LocalDateTimeUtil.format(LocalDateTime.now(), "yyyyMMddHHmmss");
-        System.out.println(uuid);
-        payTest.testRollbackMoney(uuid, 1, "", "2108161607212379000", "");
-    }
-
-
-    // 退款查询
-    @Test
-    void contesThQ() throws Exception {
-        payTest.testRollbackMoneyQuery("", "20210816111432");
-    }
 
 
     @Test
@@ -131,8 +85,7 @@ class DevmanagesApplicationTests {
     private SignatureParamEntity paramEntity;
 
     @Test
-    void TestAbc(){
-        System.out.println(Arrays.toString(paramEntity.getPathPatterns()));
+    void TestAbc() {
     }
 
     @Test
@@ -162,6 +115,39 @@ class DevmanagesApplicationTests {
         String s = restTemplate.postForObject(url, files, String.class);
         System.out.println(s);
     }
+
+
+    @Test
+    public void test() {
+        redisUtil.lSet("test", LocalDateTimeUtil.format(LocalDateTime.now(), "yyyy-MM-dd HH:mm:ss"), 3000);
+        redisUtil.lSet("test", LocalDateTimeUtil.format(LocalDateTime.now(), "yyyy-MM-dd HH:mm:ss"), 3000);
+        redisUtil.lSet("test", LocalDateTimeUtil.format(LocalDateTime.now(), "yyyy-MM-dd HH:mm:ss"), 3000);
+        redisUtil.lSet("test", LocalDateTimeUtil.format(LocalDateTime.now(), "yyyy-MM-dd HH:mm:ss"), 3000);
+        redisUtil.lSet("test", LocalDateTimeUtil.format(LocalDateTime.now(), "yyyy-MM-dd HH:mm:ss"), 3000);
+        redisUtil.lSet("test", LocalDateTimeUtil.format(LocalDateTime.now(), "yyyy-MM-dd HH:mm:ss"), 3000);
+        System.out.println(redisUtil.lGet("test", 0, -1));
+    }
+
+
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Test
+    public  void test1(){
+        System.out.println();
+        for (String scanKey : redisUtil.getScanKeys("k*", -1)) {
+            redisUtil.del(scanKey);
+        }
+        //System.out.println(redisTemplate.opsForValue().getOperations().getExpire("redisKey"));
+
+       /* Map<String,Object >map = new HashMap<>();
+        map.put("name","iot");
+        map.put("passwd","123456");
+        LoginReturn post = restTemplateUtils.post("http://zyhr.cn:50059/v1.1/login", map, LoginReturn.class).getBody();
+        System.out.println(post);*/
+
+    }
+
 
 
 }

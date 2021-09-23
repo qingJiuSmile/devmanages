@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>档案列表</title>
+    <title>外来人员设备识别记录列表</title>
     <script src="js/jquery.min.js"></script>
     <script src="js/jquery.easyui.min.js"></script>
     <script src="js/easyui-lang-zh_CN.js"></script>
@@ -26,24 +26,52 @@
                    style="background-color: #c9dfff;">
                 <tbody>
                 <tr>
-                    <td width="70" align="right">筛选条件: </td>
+                    <td width="70" align="right">筛选条件:</td>
                     <td width="150" align="left">
                         <select id="sel" class="easyui-combobox" name="selectParam" style="width:200px;">
-                            <option value="xh">人员序号</option>
-                            <option value="bh">工号</option>
-                            <option value="xm">姓名</option>
-                            <option value="kh">卡号</option>
-                            <option value="zp">照片数量</option>
-                            <option value="kssj">有效期开始</option>
-                            <option value="jssj">有效期结束</option>
-                            <option value="mj">门禁规则</option>
-                            <option value="bm">部门名称</option>
-                            <option value="rl">人脸数量</option>
+                            <option value="rec_state">记录状态</option>
+                            <option value="iden_card">身份证</option>
+                            <option value="att_dir">失败方向</option>
+                            <option value="user_name">姓名</option>
+                            <option value="user_sex">性别</option>
+                            <option value="valid_date">有效期</option>
+                            <option value="nation">名族</option>
+                            <option value="address">地址</option>
                         </select>
                     </td>
                     <td width="150" align="left">
                         <input name="queryKey" class="easyui-textbox" type="text" id="queryKey" value=""
                                maxlength="100">
+                    </td>
+                    <td width="70" align="right">开始时间:</td>
+                    <td width="150" align="left">
+                        <div class="l-text-wrapper">
+                            <div class="l-text l-text-date">
+                                <input name="timeStart" type="text" id="timeStart"
+                                       value="" maxlength="50" class="easyui-datetimebox"
+                                       ligeruiid="timeStart">
+                                <div class="l-text-l"></div>
+                                <div class="l-text-r"></div>
+                                <div class="l-trigger">
+                                    <div class="l-trigger-icon"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td width="70" align="right">结束时间:</td>
+                    <td width="150" align="left">
+                        <div class="l-text-wrapper">
+                            <div class="l-text l-text-date">
+                                <input name="timeEnd" type="text" id="timeEnd"
+                                       value="" maxlength="50" class="easyui-datetimebox"
+                                       ligeruiid="timeEnd">
+                                <div class="l-text-l"></div>
+                                <div class="l-text-r"></div>
+                                <div class="l-trigger">
+                                    <div class="l-trigger-icon"></div>
+                                </div>
+                            </div>
+                        </div>
                     </td>
                     <td width="72"><a id="search_btn" href="#"
                                       class="easyui-linkbutton" data-options="iconCls:'icon-search'">搜索</a>
@@ -78,7 +106,7 @@
             loader: function (params, success, error) {
                 $.ajax({
                     type: 'post',
-                    url: '../../deviceRecord/getArchives/10.17.1.12',
+                    url: '../../deviceRecord/getOutsiders/10.17.1.12',
                     dataType: 'json',
                     contentType: 'application/json;charset=utf-8', // 设置请求头信息
                     data: JSON.stringify(params),
@@ -103,16 +131,14 @@
             },
             columns: [[
                 //{field:'ck',checkbox:true},
-                {field: 'userSerial', title: "人员序号", width: 200, align: "left"},
-                {field: 'userNo', title: '人员工号', width: 200, align: "left"},
-                {field: 'userName', title: "姓名", width: 200, align: "left"},
-                {field: 'cardNo', title: '卡号', width: 300, align: "left"},
-                {field: 'photoStr', title: '照片', width: 300, align: "left"},
-                {field: 'faceStr', title: '人脸', width: 300, align: "left"},
-                {field: 'beginTime', title: '有效开始时间', width: 300, align: "left"},
-                {field: 'endTime', title: '有效结束时间 ', width: 300, align: "left"},
-                {field: 'rule', title: '门禁规则', width: 300, align: "left"},
-                {field: 'deptName', title: '部门名称', width: 300, align: "left"}
+                {field: 'idenTime', title: "识别时间", width: 200, align: "left"},
+                {field: 'idenCard', title: "身份证", width: 200, align: "left"},
+                {field: 'userName', title: '姓名', width: 200, align: "left"},
+                {field: 'attDirStr', title: '方向', width: 200, align: "left"},
+                {field: 'userSex', title: '性别', width: 200, align: "left"},
+                {field: 'validDate', title: '有效期', width: 200, align: "left"},
+                {field: 'nation', title: '民族', width: 200, align: "left"},
+                {field: 'address', title: '地址', width: 200, align: "left"},
             ]],
             toolbar: '#wu_toolbar',
             pagination: true,//向后台传递参数page 和rows
@@ -183,8 +209,10 @@
 
     function searchSubmit() {
         var params = {
-            queryKey:$("#queryKey").val(),
-            fieldName: $("#sel").val()
+            queryKey: $("#queryKey").val(),
+            fieldName: $("#sel").val(),
+            timeStart: $("#timeStart").val(),
+            timeEnd: $("#timeEnd").val()
         };
         loadDatagrid_pro(params);
     }

@@ -20,9 +20,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 
@@ -34,10 +33,9 @@ public class DevBaseController extends BaseClass {
     @Autowired
     private DevBaseImpl n8Implement;
 
-    private static final long MB = 1073741824L;
-
     @ApiOperation("修复设备（全量下发档案）")
     @GetMapping("/repairEquipmentToFile")
+    @DistributedLock(argNum = 1)
     public JsonResult<Integer> repairEquipmentToFile(@RequestParam("devId") String devId) {
         if (StringUtils.isBlank(devId)) {
             return failMsg("设备id为空");
@@ -47,6 +45,7 @@ public class DevBaseController extends BaseClass {
 
     @ApiOperation("修复设备（全量下发规则）")
     @GetMapping("/repairEquipmentToRule")
+    @DistributedLock(argNum = 1)
     public JsonResult<Integer> repairEquipmentToRule(@RequestParam("devId") String devId) {
         if (StringUtils.isBlank(devId)) {
             return failMsg("设备id为空");
@@ -57,9 +56,13 @@ public class DevBaseController extends BaseClass {
     @ApiOperation("获取所有设备硬件系统信息")
     @PostMapping("/getInfoAll")
     public JsonResult<SysInfoEntity> getInfoAll(@RequestBody PublicParam search) throws InterruptedException {
-        n8Implement.asyncGetSysInfo();
-        TimeUnit.MILLISECONDS.sleep(500);
         return succMsgData(n8Implement.getDevInfoMap(search));
+    }
+
+    @ApiOperation("获取所有设备当前状态")
+    @PostMapping("/getDevState")
+    public JsonResult<List<DevStateEntity>> getInfoAll() throws InterruptedException {
+        return succMsgData(n8Implement.getState());
     }
 
     @ApiOperation("获取某台设备硬件系统信息")
@@ -80,8 +83,6 @@ public class DevBaseController extends BaseClass {
     @ApiOperation("获取所有设备应用信息")
     @PostMapping("/getAppInfoAll")
     public JsonResult<AppInfoEntity> getAppInfoAll(@RequestBody PublicParam search) throws InterruptedException {
-        n8Implement.asyncGetAppInfo();
-        TimeUnit.MILLISECONDS.sleep(500);
         return succMsgData(n8Implement.getDevAppInfoMap(search));
     }
 
@@ -103,8 +104,6 @@ public class DevBaseController extends BaseClass {
     @ApiOperation("获取所有设备运行信息")
     @PostMapping("/getRunInfoAll")
     public JsonResult<RunInfoEntity> getRunInfoAll(@RequestBody PublicParam search) throws InterruptedException {
-        n8Implement.asyncGetRunInfo();
-        TimeUnit.MILLISECONDS.sleep(500);
         return succMsgData(n8Implement.getDevRunInfoMap(search));
     }
 
@@ -126,8 +125,6 @@ public class DevBaseController extends BaseClass {
     @ApiOperation("获取所有设备磁盘信息")
     @PostMapping("/getDiskInfoAll")
     public JsonResult<DiskInfoEntity> getDiskInfoAll(@RequestBody PublicParam search) throws InterruptedException {
-        n8Implement.asyncGetDiskInfo();
-        TimeUnit.MILLISECONDS.sleep(500);
         return succMsgData(n8Implement.getDevDiskInfoMap(search));
     }
 
@@ -203,6 +200,7 @@ public class DevBaseController extends BaseClass {
     @ApiOperation("设置设备开机照片")
     @PostMapping("/importStartUpImg/{ip}")
     @Signature
+    @DistributedLock(argNum = 1)
     public JsonResult<Boolean> importStartUpImg(@PathVariable String ip, MultipartFile file) {
 
         if (StringUtils.isBlank(ip)) {
@@ -292,25 +290,18 @@ public class DevBaseController extends BaseClass {
         return succMsgData(n8Implement.timeCalibration(ip));
     }
 
+    @ApiOperation("下载通讯日志")
+    @GetMapping("/downloadLog/{ip}")
+    @Signature
+    public JsonResult<String> download(@PathVariable String ip) {
 
-    @ApiOperation("设备时间校准 (设备自带校时，此功能无效)")
-    @PostMapping("/setTime1/")
-    @DistributedLock()
-    public JsonResult<Boolean> setTime121(String ip) {
-        ExecutorService executorService = Executors.newFixedThreadPool(20);
-        executorService.execute(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println(Thread.currentThread().getName() + "进入" + ip);
-            }
-        });
-        try {
-            TimeUnit.SECONDS.sleep(10);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if (StringUtils.isBlank(ip)) {
+            return failMsg("设备ip为空");
         }
-        return succMsgData(true);
+        if (!IpConfig.ipCheck(ip)) {
+            return failMsg("IP格式有误");
+        }
+        return succMsgData(n8Implement.downloadLog(ip));
     }
-
 
 }

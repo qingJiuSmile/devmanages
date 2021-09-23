@@ -8,82 +8,87 @@
 
 </head>
 <body class="easyui-layout" style="OVERFLOW:SCROLL;OVERFLOW-X:HIDDEN">
-    <div region="north" style="height: 78px; background-color: #E0ECFF">
-            <img src="img/logo.png" style="display:block;margin:5px;height:66px;">
-    </div>
-    <div region="west" style="width: 200px" title="导航菜单" split="true" data-options="iconCls:'icon-40772'" id="main">
-        <div class="easyui-accordion" data-options="border:false">
-            <div title="设备信息" data-options="iconCls:'icon-40773'" style="padding:10px;">
-                <ul id="tree2" class="easyui-tree">
-                    <li iconCls="icon-sheetin">
-                        <a href="javascript:void(0)"  onclick="addTabs('设备硬件信息列表','deviceList.html')">设备硬件信息</a>
-                    </li>
-                    <li iconCls="icon-sheetin">
-                        <a href="javascript:void(0)"  onclick="addTabs('设备应用信息列表','deviceAppList.html')">设备应用信息</a>
-                    </li>
-                    <li iconCls="icon-sheetin">
-                        <a href="javascript:void(0)"  onclick="addTabs('设备运行信息列表','deviceRunList.html')">设备运行信息</a>
-                    </li>
-                    <li iconCls="icon-sheetin">
-                        <a href="javascript:void(0)"  onclick="addTabs('设备磁盘信息列表','deviceDiskList.html')">设备磁盘信息</a>
-                    </li>
-                </ul>
-            </div>
-            <div title="人员档案" data-options="iconCls:'icon-40773'" style="padding:10px;">
-                <ul id="tree3" class="easyui-tree">
-                    <li iconCls="icon-sheetin">
-                        <a href="javascript:void(0)"  onclick="addTabs('设备档案列表','deviceRecordList.html')">设备档案信息</a>
-                    </li>
-                </ul>
-            </div>
-            <div title="门禁规则" data-options="iconCls:'icon-40773'" style="padding:10px;">
-                <ul id="tree4" class="easyui-tree">
-                    <li iconCls="icon-sheetin">
-                        <a href="javascript:void(0)"  onclick="addTabs('设备门禁规则','deviceRecordRule.html')">门禁规则</a>
-                    </li>
-                </ul>
-            </div>
-            <div title="门禁时段" data-options="iconCls:'icon-40773'" style="padding:10px;">
-                <ul id="tree5" class="easyui-tree">
-                    <li iconCls="icon-sheetin">
-                        <a href="javascript:void(0)"  onclick="addTabs('设备门禁时段','deviceRecordDateTime.html')">门禁时段</a>
-                    </li>
-                </ul>
-            </div>
-            <div title="错误信息" data-options="iconCls:'icon-40773'" style="padding:10px;">
-                <ul id="tree6" class="easyui-tree">
-                    <li iconCls="icon-sheetin">
-                        <a href="javascript:void(0)"  onclick="addTabs('人员错误信息','deviceRecordErrList.html')">错误信息</a>
-                    </li>
-                </ul>
-            </div>
-
+<div region="north" style="height: 78px; background-color: #E0ECFF">
+    <img src="img/logo.png" style="display:block;margin:5px;height:66px;">
+</div>
+<div region="west" style="width: 200px" title="导航菜单" split="true" data-options="iconCls:'icon-40772'" id="main">
+    <div class="easyui-accordion" data-options="border:false">
+        <div title="设备信息" data-options="iconCls:'icon-40773'" style="padding:10px;">
+            <ul id="tree2" class="easyui-tree">
+                <li iconCls="icon-sheetin">
+                    <a href="javascript:void(0)" onclick="addTabs('设备硬件信息列表','deviceList.html')">设备硬件信息</a>
+                </li>
+                <li iconCls="icon-sheetin">
+                    <a href="javascript:void(0)" onclick="addTabs('设备应用信息列表','deviceAppList.html')">设备应用信息</a>
+                </li>
+                <li iconCls="icon-sheetin">
+                    <a href="javascript:void(0)" onclick="addTabs('设备运行信息列表','deviceRunList.html')">设备运行信息</a>
+                </li>
+                <li iconCls="icon-sheetin">
+                    <a href="javascript:void(0)" onclick="addTabs('设备磁盘信息列表','deviceDiskList.html')">设备磁盘信息</a>
+                </li>
+                <li iconCls="icon-sheetin">
+                    <a href="javascript:void(0)" onclick="addTabs('设备实时状态','deviceStateList.html')">设备实时状态</a>
+                </li>
+            </ul>
+        </div>
+        <div title="人员档案" data-options="iconCls:'icon-40773'" style="padding:10px;">
+            <ul id="tree3" class="easyui-tree">
+                <li iconCls="icon-sheetin">
+                    <a href="javascript:void(0)" onclick="addTabs('设备档案列表','deviceRecordList.html')">设备档案信息</a>
+                </li>
+                <li iconCls="icon-sheetin">
+                    <a href="javascript:void(0)" onclick="addTabs('设备识别记录','deviceRecordIdentList.html')">识别记录</a>
+                </li>
+                <li iconCls="icon-sheetin">
+                    <a href="javascript:void(0)"
+                       onclick="addTabs('外来设备识别记录','deviceRecordOutIdentList.html')">外来人员识别记录</a>
+                </li>
+                <li iconCls="icon-sheetin">
+                    <a href="javascript:void(0)" onclick="addTabs('上传人脸错误信息','deviceRecordErrList.html')">上传人脸错误信息</a>
+                </li>
+            </ul>
+        </div>
+        <div title="门禁规则" data-options="iconCls:'icon-40773'" style="padding:10px;">
+            <ul id="tree4" class="easyui-tree">
+                <li iconCls="icon-sheetin">
+                    <a href="javascript:void(0)" onclick="addTabs('设备门禁规则','deviceRecordRule.html')">门禁规则</a>
+                </li>
+            </ul>
+        </div>
+        <div title="门禁时段" data-options="iconCls:'icon-40773'" style="padding:10px;">
+            <ul id="tree5" class="easyui-tree">
+                <li iconCls="icon-sheetin">
+                    <a href="javascript:void(0)" onclick="addTabs('设备门禁时段','deviceRecordDateTime.html')">门禁时段</a>
+                </li>
+            </ul>
         </div>
     </div>
-    <div data-options="region:'center'" style="background:#eee;">
-        <div class="easyui-tabs" fit="true" border="false" id="tabs">
-        </div>
+</div>
+<div data-options="region:'center'" style="background:#eee;">
+    <div class="easyui-tabs" fit="true" border="false" id="tabs">
     </div>
+</div>
 <script src="js/jquery.min.js"></script>
 <script src="js/jquery.easyui.min.js"></script>
 <script>
-    function addTabs(m_title,m_url){
-        var index_temp01=m_url.indexOf('/');
-        var index_temp02=m_url.indexOf('.');
-        var name=m_url.substring(index_temp01+1,index_temp02);
-        var m_content="<iframe name='"+name+"' src='"+m_url+"' frameborder='0'style='width: 100%;height: 100%'></iframe>"
-        if($("#tabs").tabs("exists",m_title)){
-            $("#tabs").tabs("close",m_title);
-            $("#tabs").tabs('add',{
-                title:m_title,
-                content:m_content,
-                closable:true
+    function addTabs(m_title, m_url) {
+        var index_temp01 = m_url.indexOf('/');
+        var index_temp02 = m_url.indexOf('.');
+        var name = m_url.substring(index_temp01 + 1, index_temp02);
+        var m_content = "<iframe name='" + name + "' src='" + m_url + "' frameborder='0'style='width: 100%;height: 100%'></iframe>"
+        if ($("#tabs").tabs("exists", m_title)) {
+            $("#tabs").tabs("close", m_title);
+            $("#tabs").tabs('add', {
+                title: m_title,
+                content: m_content,
+                closable: true
             });
-        }else{
-            $("#tabs").tabs('add',{
-                title:m_title,
-                content:m_content,
-                closable:true
+        } else {
+            $("#tabs").tabs('add', {
+                title: m_title,
+                content: m_content,
+                closable: true
             });
         }
     }

@@ -20,7 +20,7 @@ public class RecordEntity {
 
     private RecordData data;
 
-    private List<?> rows;
+    private List<RecordData> rows;
 
     private Integer total; //总数量
 

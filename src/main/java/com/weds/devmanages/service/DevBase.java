@@ -129,4 +129,12 @@ public interface DevBase {
      **/
     boolean timeCalibration(String devIp);
 
+    /**
+     * 下载设备通讯日志
+     *
+     * @param devIp 设备id
+     * @return {@link String} 下载地址
+     **/
+    String downloadLog(String devIp);
+
 }

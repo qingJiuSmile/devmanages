@@ -1,7 +1,9 @@
 package com.weds.devmanages.service.impl.base;
 
+import cn.hutool.core.date.LocalDateTimeUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.weds.devmanages.config.thread.DevThreadPoolConfig;
+import com.weds.devmanages.config.thread.MethodThreadPoolConfig;
 import com.weds.devmanages.entity.*;
 import com.weds.devmanages.entity.record.RecordEntity;
 import com.weds.devmanages.mapper.datasource1.DeviceBaseManage2PGMapper;
@@ -9,14 +11,14 @@ import com.weds.devmanages.mapper.datasource2.DeviceBaseMange2MSMapper;
 import com.weds.devmanages.service.DevBase;
 import com.weds.devmanages.service.DevRestart;
 import com.weds.devmanages.service.impl.record.DevRecordImpl;
-import com.weds.devmanages.util.PageUtil;
-import com.weds.devmanages.util.RedisUtil;
-import com.weds.devmanages.util.RestTemplateUtils;
-import com.weds.devmanages.util.TaskQueueDaemonThread;
+import com.weds.devmanages.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -30,7 +32,9 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static com.weds.devmanages.service.impl.record.DevRecordImpl.CODE;
 import static com.weds.devmanages.service.impl.record.DevRecordImpl.SUCCESS;
@@ -50,6 +54,9 @@ public class DevBaseImpl implements DevBase, DevRestart {
     private RestTemplateUtils restTemplateUtils;
 
     @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
     private RestTemplate restTemplate;
 
     @Autowired
@@ -61,7 +68,51 @@ public class DevBaseImpl implements DevBase, DevRestart {
     @Autowired
     private DevThreadPoolConfig n8ThreadPool;
 
-    public static String N8_USER_ACCOUNT = "N8:USER:ACCOUNT";
+    @Autowired
+    private MethodThreadPoolConfig methodThreadPollConfig;
+
+    @Autowired
+    private RedissonClient redissonClient;
+
+    /**
+     * 人员档案
+     */
+    public static final String N8_USER_ACCOUNT = "N8:USER:ACCOUNT";
+
+    /**
+     * 设备硬件信息前缀
+     */
+    private static final String SYS_INFO = "N8:SYSTEM:DATA:";
+
+    /**
+     * 设备应用信息前缀
+     */
+    private static final String SYS_APP = "N8:SYSTEM:APP:";
+
+    /**
+     * 设备运行信息前缀
+     */
+    private static final String SYS_RUN = "N8:SYSTEM:RUN:";
+
+    /**
+     * 设备磁盘信息前缀
+     */
+    private static final String SYS_DISK = "N8:SYSTEM:DISK:";
+
+    /**
+     * 连通性前缀
+     **/
+    private static final String CONNECTION = "N8:CONNECTION:";
+
+    /**
+     * 连通成功后记录前缀
+     **/
+    private static final String CONNECTION_ERR_SUCCESS = CONNECTION + "SUCCESS:";
+
+    /**
+     * 连通失败后记录前缀
+     **/
+    private static final String CONNECTION_ERR_MESSAGE = CONNECTION + "ERR:";
 
     private static final int OPERATION_ID = 1073741824;
 
@@ -82,6 +133,7 @@ public class DevBaseImpl implements DevBase, DevRestart {
      * 存储token容器 格式 ：K（设备IP） - V （token值）
      */
     public static Map<String, Object> tokenMap = new ConcurrentHashMap<>();
+
     /**
      * 存储硬件信息回调数据 格式: K（设备IP） - V （硬件信息）
      */
@@ -203,6 +255,42 @@ public class DevBaseImpl implements DevBase, DevRestart {
     }
 
     /**
+     * 获取当前所有设备状态
+     *
+     * @return {@link DevStateEntity}
+     **/
+    public List<DevStateEntity> getState() {
+        // 获取设备连接状态所有key
+        Set<String> scanKeys = redisUtil.getScanKeys(CONNECTION_ERR_SUCCESS + "*", -1);
+        List<DevStateEntity> stateLs = new ArrayList<>();
+        // 批量通过key获取value
+        List<Object> list = redisTemplate.opsForValue().multiGet(scanKeys);
+        if (list != null && !list.isEmpty()) {
+            list.forEach(item -> {
+                DevStateEntity obj = new DevStateEntity();
+
+                // 获取设备状态记录时间
+                String successTime = JSONObject.parseObject(item.toString()).getString("time");
+                // 获取设备状态标识 1在线 2离线
+                int state = JSONObject.parseObject(item.toString()).getIntValue("state");
+                // 获取当前设备ip
+                String ip = JSONObject.parseObject(item.toString()).getString("ip");
+                obj.setDevIp(ip).setDevState(state).setSuccessTime(successTime);
+
+                // 获取缓存中连接错误信息
+                Object o = redisTemplate.opsForValue().get(CONNECTION_ERR_MESSAGE + ip);
+                // 通过当前设备ip，再去取该ip的连接失败记录，如果有就记录
+                if (o != null) {
+                    obj.setErrorTime(JSONObject.parseObject(o.toString()).getString("time"))
+                            .setErrorMsg(JSONObject.parseObject(o.toString()).getString("msg"));
+                }
+                stateLs.add(obj);
+            });
+        }
+        return stateLs;
+    }
+
+    /**
      * 获取设备硬件信息
      *
      * @param search 查询条件
@@ -212,7 +300,21 @@ public class DevBaseImpl implements DevBase, DevRestart {
     public SysInfoEntity getDevInfoMap(PublicParam search) {
         SysInfoEntity sysInfoEntity = new SysInfoEntity();
         List<SysInfoEntity.SysData> list = new ArrayList<>();
-        devSysInfoMap.forEach((k, v) -> list.add(v));
+
+        // TODO 2021-9-22 这里转为从redis中获取
+        // devSysInfoMap.forEach((k, v) -> list.add(v));
+        Set<String> scanKeys = redisUtil.getScanKeys(SYS_INFO + "*", -1);
+        List<Object> devLs = redisTemplate.opsForValue().multiGet(scanKeys);
+
+        // 数据不为空则添加
+        if (devLs != null && !devLs.isEmpty()) {
+            devLs.forEach(item -> {
+                SysInfoEntity.SysData sysData = JSONObject.parseObject(item.toString(), SysInfoEntity.SysData.class);
+                if (sysData != null && StringUtils.isNotBlank(sysData.getDevIp())) {
+                    list.add(sysData);
+                }
+            });
+        }
 
         //////////////////////   筛选、排序等   //////////////////////
         // 排序
@@ -249,7 +351,20 @@ public class DevBaseImpl implements DevBase, DevRestart {
     public AppInfoEntity getDevAppInfoMap(PublicParam search) {
         AppInfoEntity appInfoEntity = new AppInfoEntity();
         List<AppInfoEntity.AppInfoData> list = new ArrayList<>();
-        devAppInfoMap.forEach((k, v) -> list.add(v));
+        // devAppInfoMap.forEach((k, v) -> list.add(v));
+
+        Set<String> scanKeys = redisUtil.getScanKeys(SYS_APP + "*", -1);
+        List<Object> devLs = redisTemplate.opsForValue().multiGet(scanKeys);
+
+        // 数据不为空则添加
+        if (devLs != null && !devLs.isEmpty()) {
+            devLs.forEach(item -> {
+                AppInfoEntity.AppInfoData sysData = JSONObject.parseObject(item.toString(), AppInfoEntity.AppInfoData.class);
+                if (sysData != null && StringUtils.isNotBlank(sysData.getDevIp())) {
+                    list.add(sysData);
+                }
+            });
+        }
 
         //////////////////////   筛选、排序等   //////////////////////
         // 排序
@@ -278,8 +393,19 @@ public class DevBaseImpl implements DevBase, DevRestart {
 
         RunInfoEntity appInfoEntity = new RunInfoEntity();
         List<RunInfoEntity.RunInfoData> list = new ArrayList<>();
-        devRunInfoMap.forEach((k, v) -> list.add(v));
+        //  devRunInfoMap.forEach((k, v) -> list.add(v));
+        Set<String> scanKeys = redisUtil.getScanKeys(SYS_RUN + "*", -1);
+        List<Object> devLs = redisTemplate.opsForValue().multiGet(scanKeys);
 
+        // 数据不为空则添加
+        if (devLs != null && !devLs.isEmpty()) {
+            devLs.forEach(item -> {
+                RunInfoEntity.RunInfoData sysData = JSONObject.parseObject(item.toString(), RunInfoEntity.RunInfoData.class);
+                if (sysData != null && StringUtils.isNotBlank(sysData.getDevIp())) {
+                    list.add(sysData);
+                }
+            });
+        }
         //////////////////////   筛选、排序等   //////////////////////
         // 排序
         if (StringUtils.isNotBlank(search.getOrder()) && StringUtils.isNotBlank(search.getSort())) {
@@ -306,7 +432,20 @@ public class DevBaseImpl implements DevBase, DevRestart {
     public DiskInfoEntity getDevDiskInfoMap(PublicParam search) {
         DiskInfoEntity diskInfoEntity = new DiskInfoEntity();
         List<DiskInfoEntity.DiskInfoData> list = new ArrayList<>();
-        devDiskInfoMap.forEach((k, v) -> list.add(v));
+        // devDiskInfoMap.forEach((k, v) -> list.add(v));
+
+        Set<String> scanKeys = redisUtil.getScanKeys(SYS_DISK + "*", -1);
+        List<Object> devLs = redisTemplate.opsForValue().multiGet(scanKeys);
+
+        // 数据不为空则添加
+        if (devLs != null && !devLs.isEmpty()) {
+            devLs.forEach(item -> {
+                DiskInfoEntity.DiskInfoData sysData = JSONObject.parseObject(item.toString(), DiskInfoEntity.DiskInfoData.class);
+                if (sysData != null && StringUtils.isNotBlank(sysData.getDevIp())) {
+                    list.add(sysData);
+                }
+            });
+        }
 
         //////////////////////   筛选、排序等   //////////////////////
         // 排序
@@ -555,7 +694,6 @@ public class DevBaseImpl implements DevBase, DevRestart {
                 devDiskInfoMap.remove(k);
                 JSONObject body = restTemplateUtils.post(url, addHeader(k), null, JSONObject.class, new HashMap<>()).getBody();
                 if (body == null) {
-                    // 如果请求失败再次请求 加入队列 TODO
                     addQueue(restartDiskInfo(k));
                 } else {
                     // 判断响应情况
@@ -564,14 +702,12 @@ public class DevBaseImpl implements DevBase, DevRestart {
                         data.setDevIp(k);
                         devDiskInfoMap.put(k, data);
                     } else {
-                        // 请求错误加入队列重新请求 TODO
                         addQueue(restartDiskInfo(k));
                     }
 
                 }
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
-                // 失败时，也加入队列，再次请求 TODO
                 addQueue(restartDiskInfo(k));
             }
         }));
@@ -585,7 +721,6 @@ public class DevBaseImpl implements DevBase, DevRestart {
     @Override
     public boolean deviceUpdate(String ip, MultipartFile file) {
 
-        // TODO 限制同一时间只能一台设备进行升级
         String url = REQUEST_PREFIX + ip + "/config/update_app";
 
         // 通过ip获取设备密码
@@ -696,6 +831,19 @@ public class DevBaseImpl implements DevBase, DevRestart {
             return SUCCESS.equals(body.getString(DevRecordImpl.MSG)) && body.getIntValue(CODE) == 0;
         }
         return false;
+    }
+
+    @Override
+    public String downloadLog(String devIp) {
+        // 下载文件因为是以流的形式，无法直接使用http请求去访问
+        // 所以需要将内容在浏览器中直接打开
+        String url = DevBaseImpl.REQUEST_PREFIX + devIp + "/data/down_log";
+        try {
+            return url + "?access_token=" + tokenMap.get(devIp);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return null;
+        }
     }
 
 
@@ -920,6 +1068,163 @@ public class DevBaseImpl implements DevBase, DevRestart {
 
 
     /**
+     * 初始化请求设备硬件方法
+     **/
+    public void initSendDevRequest() {
+        tokenMap.forEach(
+                (k, v) -> methodThreadPollConfig.instance().execute(() -> {
+                    String url = DevBaseImpl.REQUEST_PREFIX + k + "/data/get_sys_info";
+                    try {
+                        // 请求对应ip的接口
+                        JSONObject body = restTemplateUtils.post(url, DevBaseImpl.addHeader(k),
+                                null,
+                                JSONObject.class,
+                                new HashMap<>(16)
+                        ).getBody();
+                        // 判断响应情况
+                        if (body != null && SUCCESS.equals(body.getString(DevRecordImpl.MSG)) && body.getIntValue(CODE) == 0) {
+                            SysInfoEntity.SysData data = body.getObject("data", SysInfoEntity.SysData.class);
+                            data.setDevIp(k);
+                            // 成功请求的设备进行项目启动时存入缓存
+                            //log.info("" + data);
+                            redisUtil.set(SYS_INFO + k, JSONObject.toJSONString(data));
+                        }
+                    } catch (Exception e) {
+                        log.error(e.getMessage(), e);
+                    }
+                }));
+    }
+
+    /**
+     * 初始化设备应用信息
+     **/
+    public void initDeviceAppInfo() {
+        tokenMap.forEach(
+                (k, v) -> methodThreadPollConfig.instance().execute(() -> {
+                    String url = DevBaseImpl.REQUEST_PREFIX + k + "/data/get_app_info";
+                    try {
+                        // 请求对应ip的接口
+                        JSONObject body = restTemplateUtils.post(url, DevBaseImpl.addHeader(k),
+                                null,
+                                JSONObject.class,
+                                new HashMap<>(16)
+                        ).getBody();
+
+                        if (body != null) {
+                            // 判断响应情况
+                            if (SUCCESS.equals(body.getString(DevRecordImpl.MSG)) && body.getIntValue(CODE) == 0) {
+                                AppInfoEntity.AppInfoData data = body.getObject("data", AppInfoEntity.AppInfoData.class);
+                                data.setDevIp(k);
+                                redisTemplate.opsForValue().set(SYS_APP + k, JSONObject.toJSONString(data));
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.error(e.getMessage(), e);
+                    }
+                }));
+    }
+
+    /**
+     * 初始化设备运行信息
+     */
+    public void initDeviceRunInfo() {
+        tokenMap.forEach(
+                (k, v) -> methodThreadPollConfig.instance().execute(() -> {
+                    String url = DevBaseImpl.REQUEST_PREFIX + k + "/data/get_run_info";
+                    try {
+                        // 请求对应ip的接口
+                        JSONObject body = restTemplateUtils.post(url, DevBaseImpl.addHeader(k),
+                                null,
+                                JSONObject.class,
+                                new HashMap<>(16)
+                        ).getBody();
+
+                        if (body != null) {
+                            // 判断响应情况
+                            if (SUCCESS.equals(body.getString(DevRecordImpl.MSG)) && body.getIntValue(CODE) == 0) {
+                                RunInfoEntity.RunInfoData data = body.getObject("data", RunInfoEntity.RunInfoData.class);
+                                data.setDevIp(k);
+                                redisTemplate.opsForValue().set(SYS_RUN + k, JSONObject.toJSONString(data));
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.error(e.getMessage(), e);
+                    }
+                }));
+    }
+
+    /**
+     * 初始化设备磁盘信息
+     */
+    public void initDeviceDiskInfo() {
+        tokenMap.forEach(
+                (k, v) -> methodThreadPollConfig.instance().execute(() -> {
+                    String url = DevBaseImpl.REQUEST_PREFIX + k + "/data/get_disk_info";
+                    try {
+                        // 请求对应ip的接口
+                        JSONObject body = restTemplateUtils.post(url, DevBaseImpl.addHeader(k),
+                                null,
+                                JSONObject.class,
+                                new HashMap<>(16)
+                        ).getBody();
+
+                        if (body != null) {
+                            // 判断响应情况
+                            if (SUCCESS.equals(body.getString(DevRecordImpl.MSG)) && body.getIntValue(CODE) == 0) {
+                                DiskInfoEntity.DiskInfoData data = body.getObject("data", DiskInfoEntity.DiskInfoData.class);
+                                data.setDevIp(k);
+                                redisTemplate.opsForValue().set(SYS_DISK + k, JSONObject.toJSONString(data));
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.error(e.getMessage(), e);
+                    }
+                }));
+    }
+
+    /**
+     * 初始化对设备连通性进行验证
+     **/
+    public void initDeviceState() {
+        tokenMap.forEach((k, v) ->
+                methodThreadPollConfig.instance().execute(
+                        () -> {
+                            RLock lock = redissonClient.getLock(k);
+                            // ping当前对应ip的设备
+                            try {
+                                lock.lock(9, TimeUnit.SECONDS);
+                                boolean ping = OpenBrowser.ping(k);
+                                Map<String, Object> map = new HashMap<>(5);
+                                map.put("time", LocalDateTimeUtil.format(LocalDateTime.now(), "yyyy-MM-dd HH:mm:ss"));
+                                map.put("ip", k);
+                                if (ping) {
+                                    // 标记状态1 ping通
+                                    map.put("state", 1);
+
+                                    redisUtil.set(CONNECTION_ERR_SUCCESS + k, JSONObject.toJSONString(map));
+                                } else {
+                                    // 标记状态为2 ping不通
+                                    map.put("state", 2);
+                                    redisUtil.set(CONNECTION_ERR_SUCCESS + k, JSONObject.toJSONString(map));
+                                    Map<String, Object> errMap = new HashMap<>(5);
+                                    errMap.put("msg", "设备ping不通");
+                                    errMap.put("time", LocalDateTimeUtil.format(LocalDateTime.now(), "yyyy-MM-dd HH:mm:ss"));
+                                    redisUtil.set(CONNECTION_ERR_MESSAGE + k, JSONObject.toJSONString(errMap));
+                                }
+                            } catch (Exception e) {
+                                log.error(e.getMessage(), e);
+                            } finally {
+                                if (lock != null && lock.isHeldByCurrentThread()) {
+                                    lock.unlock();
+                                }
+                            }
+
+                        }
+                )
+        );
+    }
+
+    /**
      * 初始化加载token
      *
      * @author tjy
@@ -943,15 +1248,66 @@ public class DevBaseImpl implements DevBase, DevRestart {
                     N8LoginEntity login = login(entity.getPassword(), entity.getIp());
                     if (login != null && StringUtils.isNotBlank(login.getData().getToken())) {
                         tokenMap.put(entity.getIp(), login.getData().getToken());
+                        // 初始化将设备信息存入缓存
+                        SysInfoEntity.SysData sysInfo = getSysInfo(entity.getIp());
+                        if (sysInfo != null) {
+                            redisUtil.set(SYS_INFO + entity.getIp(), JSONObject.toJSONString(sysInfo));
+                        }
                     }
                     log.info("" + tokenMap);
                 } catch (Exception e) {
-                   // log.error("设备 ==> [{}] {}{}", o, e.getMessage(), e);
+                    // log.error("设备 ==> [{}] {}{}", o, e.getMessage(), e);
                 }
             });
         }
 
     }
 
+    /**
+     * token定时巡检
+     **/
+    public void tokenRegularInspection() {
+        // 取已存在的token值的key与持久化数据中注册了的设备key进行对比，将差值进行二次请求，如果请求成功，则将token存入
+        List deviceAccount = getDeviceAccount();
+        // 获取列表失败
+        if (deviceAccount.isEmpty()) {
+            return;
+        }
+        // 获取注册列表信息
+        List<N8RequestEntity> tokenList = new ArrayList<>();
+        for (Object obj : deviceAccount) {
+            tokenList.add(JSONObject.parseObject(obj.toString(), N8RequestEntity.class));
+        }
+        // 获取token列表中的信息
+        List<N8RequestEntity> map2List = tokenMap.
+                entrySet().stream().map(
+                en -> new N8RequestEntity(en.getValue().toString(), en.getKey())).collect(Collectors.toList());
+
+        // 二者取差集
+        List<N8RequestEntity> newList = tokenList.stream()
+                .filter(
+                        item -> !map2List.stream().map(N8RequestEntity::getIp).collect(Collectors.toList())
+                                .contains(item.getIp())
+                ).collect(Collectors.toList());
+
+        // 循环每个注册过但没有加入token的设备
+        newList.forEach(req -> n8ThreadPool.taskExecutor().execute(() -> {
+            try {
+                // 请求token接口
+                N8LoginEntity login = login(req.getPassword(), req.getIp());
+                if (login != null && StringUtils.isNotBlank(login.getData().getToken())) {
+                    tokenMap.put(req.getIp(), login.getData().getToken());
+                }
+                // 调用成功后，刷新一遍该设备的硬件信息
+                initSendDevRequest();
+                initDeviceRunInfo();
+                initDeviceAppInfo();
+                initDeviceDiskInfo();
+            } catch (Exception e) {
+                //  log.error(e.getMessage(), e);
+            }
+        }));
+
+    }
 
 }

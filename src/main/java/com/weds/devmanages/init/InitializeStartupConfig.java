@@ -6,6 +6,8 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * 项目启动加载项
  **/
@@ -14,11 +16,16 @@ import org.springframework.stereotype.Component;
 public class InitializeStartupConfig implements ApplicationRunner {
 
     @Autowired
-    private DevBaseImpl n8Implement;
+    private DevBaseImpl devBase;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-
-        n8Implement.initToken();
+        devBase.initToken();
+        // 休眠5秒 给token获取时间
+        TimeUnit.SECONDS.sleep(5);
+        devBase.initSendDevRequest();
+        devBase.initDeviceAppInfo();
+        devBase.initDeviceRunInfo();
+        devBase.initDeviceDiskInfo();
     }
 }

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>设备列表</title>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery.easyui.min.js"></script>
+    <script src="js/easyui-lang-zh_CN.js"></script>
+    <link rel="stylesheet" href="js/themes/icon.css">
+    <link rel="stylesheet" href="js/themes/default/easyui.css">
+    <link rel="stylesheet" href="css/wu.css">
+    <script>
+        // window.setInterval(loadDatagrid_pro, 100);
+        function loadDatagrid_pro(params) {
+            $("#productList").datagrid({
+                //easyui封装的请求contentType 没有json形式所以这里重新请求方法。
+                loader: function (params, success, error) {
+                    $.ajax({
+                        type: 'post',
+                        url: '../../base/getDevState',
+                        dataType: 'json',
+                        contentType: 'application/json;charset=utf-8', // 设置请求头信息
+                        data: JSON.stringify(params),
+                        success: function (data) {
+                            console.log(data);
+                            success(data.data);
+                        },
+                        error: function (data) {
+                            error(data.msg);
+                        }
+                    });
+                },
+                queryParams: params,
+                rownumbers: true,
+                fitColumns: true,
+                checkOnSelect: false,
+                striped: true,
+               // sortName: "ctDate",
+                sortOrder: "desc",
+                onSelect: function (rowIndex, rowData) {  //用于解决点击某行不会高亮
+                    $('#productList').datagrid('unselectRow', rowIndex);
+                },
+                columns: [[
+                    //{field:'ck',checkbox:true},
+                    {field: 'devIp', title: "设备ip", width: 300, align: "left",sortable: true},
+                    {field: 'devStateStr', title: '设备状态', width: 300, align: "left"},
+                    {field: 'successTime', title: "记录状态时间", width: 400, align: "left"},
+                    {field: 'errorTime', title: "设备连通失败时间", width: 400, align: "left"},
+                    {field: 'errorMsg', title: '失败描述', width: 300, align: "left"},
+                ]],
+                toolbar: '#wu_toolbar',
+                pagination: true,//向后台传递参数page 和rows
+                pageNumber: 1,
+                pageSize: 15,
+                pageList: [15, 30, 40],
+                onLoadError: function (data) {  //发生错误时提示信息
+                    $.messager.alert('错误', data, 'error');
+                },
+                onClickCell: function (index, field, value) {
+                    $('#productList').datagrid('beginEdit', index);
+                    var data = $('#productList').datagrid('getRows');
+                    var row = data[index];
+                    console.log(row)
+                }
+            });
+        }
+
+        function updateOption(index, val) {
+            $('#productList').datagrid('endEdit', index);
+            var rows = $('#productList').datagrid('getRows');
+            var row = rows[index];
+            console.log(row)
+            $.messager.confirm('提示框', '您确认修改此行数据吗？', function (r) {
+                if (r) {
+                    $.ajax({
+                        type: "post",
+                        url: '../../v1/conf/updateOption',
+                        data: JSON.stringify(row),
+                        dataType: "json",
+                        contentType: 'application/json;charset=utf-8',
+                        success: function (data) {
+                            $.messager.alert('提示框', data.msg, 'info');
+                            refreshDatagrid();
+                        },
+                        error: function (data) {
+                            $.messager.alert('提示框', data.msg, 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        function checkOption(index, val) {
+            $('#productList').datagrid('endEdit', index);
+            var rows = $('#productList').datagrid('getRows');
+            var row = rows[index];
+            console.log(row)
+            $.messager.confirm('提示框', '您确认修改此行数据吗？', function (r) {
+                if (r) {
+                    $.ajax({
+                        type: "post",
+                        url: '../../v1/conf/updateOption',
+                        data: JSON.stringify(row),
+                        dataType: "json",
+                        contentType: 'application/json;charset=utf-8',
+                        success: function (data) {
+                            $.messager.alert('提示框', data.msg, 'info');
+                            refreshDatagrid();
+                        },
+                        error: function (data) {
+                            $.messager.alert('提示框', data.msg, 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        function searchSubmit() {
+            var params = {
+                //findcode: $("#findcode").val(),
+                ctDate: $("#ctDate").val(),
+                partyName: $("#partyName").val(),
+                remark: $("#remark").val()
+            };
+            loadDatagrid_pro(params);
+        }
+
+        function hideTable() {
+            $("#searchdiv").toggle();
+        }
+
+        function resetForm() {
+            $("#form1").form('reset');
+        }
+
+        $(function () {
+            loadDatagrid_pro(null);
+            $("#search_btn").click(function () {
+                searchSubmit();
+            });
+        })
+
+        function addProduct() {
+            parent.addTabs("", "");
+        }
+
+        function refreshDatagrid() {
+            $("#productList").datagrid('reload');
+        }
+
+        function del() {
+            var rows = $("#productList").datagrid('getChecked');
+            if (rows.length == 0) {
+                $.messager.alert('消息', "请选择记录");
+                return
+            }
+            $.messager.confirm('确认', '您确认想要删除记录吗？', function (r) {
+                if (r) {
+
+                }
+                var code = new Array();
+                for (var i = 0; i < rows.length; i++) {
+                    code[i] = rows[i].code;
+                }
+                $.ajax({
+                    url: "",
+                    data: {"code": code},
+                    success: function (data) {
+                        if (data == "success") {
+                            alert("删除成功");
+                        }
+                    }
+                });
+                $("#productList").datagrid('reload');
+            });
+
+        }
+
+        /*行中的删除方法*/
+        function deleteBtn(index) {
+            $.messager.confirm('确认', '您确认想要删除吗？', function (r) {
+                if (r) {
+                    deleteData(index);
+                }
+            });
+        }
+
+        /*通用删除方法*/
+        function deleteData(index) {
+            //返回当前页的行
+            var rows = $('#productList').datagrid('getRows');
+            //根据按钮返回的下标，获得选中行
+            var row = rows[index];
+            //ajax 异步删除操作
+            $.ajax({
+                type: "post",
+                url: "",
+                data: {collectCode: row.code, collectStatus: row.collectStatus},
+                dataType: "json",
+                success: function (data) {
+                    alert(data.msg);
+                    refreshDatagrid();
+                },
+                error: function (data) {
+                    alert(data.msg)
+                }
+            });
+        }
+    </script>
+
+</head>
+<body>
+<div id="wu_toolbar">
+    <div class="wu_toolbar_button">
+        <a href="#" onclick="hideTable()" class="easyui-linkbutton"
+           data-options="iconCls:'icon-search'" plain="true">隐藏查询框</a>|
+        <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-page-refresh'" plain="true"
+           onclick="refreshDatagrid()">刷新</a>
+    </div>
+    <div id="searchdiv" style="display: block; width: 100%;">
+        <form name="form1" id="form1">
+
+            <table width="100%" border="0" cellspacing="0"
+                   style="background-color: #c9dfff;">
+                <tbody>
+               <!-- <tr>
+                    <td width="70" align="right">创建时间:</td>
+                    <td width="150" align="left">
+                        <div class="l-text-wrapper">
+                            <div class="l-text l-text-date">
+                                <input name="ctDate" type="text" id="ctDate"
+                                       value="" maxlength="30" class="easyui-datetimebox"
+                                       ligeruiid="ctDate">
+                                <div class="l-text-l"></div>
+                                <div class="l-text-r"></div>
+                                <div class="l-trigger">
+                                    <div class="l-trigger-icon"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td width="70" align="right">所属厂商:</td>
+                    <td width="150" align="left">
+                        <input name="partyName" class="easyui-textbox" type="text" id="partyName" value=""
+                               maxlength="100">
+                    </td>
+                    <td width="70" align="right">描述:</td>
+                    <td width="150" align="left">
+                        <input name="remark" class="easyui-textbox" type="text" id="remark" value="" maxlength="100">
+                    </td>
+                    <td width="72"><a id="search_btn" href="#"
+                                      class="easyui-linkbutton" data-options="iconCls:'icon-search'">搜索</a>
+                    </td>
+                    <td width="72"><a id="reset_btn" href="#"
+                                      class="easyui-linkbutton" data-options="iconCls:'icon-refresh'"
+                                      onclick="javascript:resetForm()">重置</a></td>
+                    <td width="0"></td>
+
+
+                </tr>-->
+                </tbody>
+            </table>
+            <input type="hidden" id="menuCode" value="100001001">
+        </form>
+    </div>
+</div>
+<div id="productList" class="easyui-datagrid">
+    <div id="dialog">
+        <div id="dialog-show-data"></div>
+    </div>
+</div>
+<div id="detail_div" style="display: none">
+    <p></p>
+    <div id="detail" class="easyui-datagrid"></div>
+</div>
+</body>
+</html>

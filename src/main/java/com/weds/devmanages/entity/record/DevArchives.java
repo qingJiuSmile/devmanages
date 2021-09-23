@@ -61,13 +61,17 @@ public class DevArchives extends DevResultEntity {
         @JSONField(name = "kh")
         private String cardNo;
 
-        @ApiModelProperty("照片数量")
+        @ApiModelProperty("照片 0 不存在 1存在")
         @JSONField(name = "zp")
         private Integer photoNum;
 
-        @ApiModelProperty("人脸数量")
+        private String photoStr;
+
+        @ApiModelProperty("人脸 0 无 2有")
         @JSONField(name = "rl")
         private Integer faceNum;
+
+        private String faceStr;
 
         @ApiModelProperty("有效开始时间")
         @JSONField(name = "kssj")
@@ -81,7 +85,7 @@ public class DevArchives extends DevResultEntity {
 
         @ApiModelProperty("门禁规则")
         @JSONField(name = "mj")
-        private Integer rule;
+        private String rule;
 
         @ApiModelProperty("部门名称")
         @JSONField(name = "bm")
